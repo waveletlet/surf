@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/headzoo/surf/errors"
-	"github.com/headzoo/surf/jar"
+	"github.com/lostinblue/surf/errors"
+	"github.com/lostinblue/surf/jar"
 )
 
 // Attribute represents a Browser capability.
@@ -537,6 +537,10 @@ func (bow *Browser) SetHeadersJar(h http.Header) {
 // SetTimeout sets the timeout for requests.
 func (bow *Browser) SetTimeout(t time.Duration) {
 	bow.timeout = t
+}
+
+func (bow *Browser) Timeout() time.Duration {
+	return bow.timeout
 }
 
 // SetTransport sets the http library transport mechanism for each request.
