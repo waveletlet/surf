@@ -3,8 +3,8 @@ package surf
 import (
 	"bytes"
 	"fmt"
-	"github.com/headzoo/surf/jar"
-	"github.com/headzoo/ut"
+	"github.com/lostinblue/surf/jar"
+	"github.com/lostinblue/ut"
 	"net/http"
 	"net/http/httptest"
 	"testing"
