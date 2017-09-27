@@ -3,7 +3,7 @@ package jar
 import (
 	"testing"
 
-	"github.com/headzoo/ut"
+	"github.com/lostinblue/ut"
 )
 
 func TestMemoryHistory(t *testing.T) {
