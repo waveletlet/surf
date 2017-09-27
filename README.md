@@ -13,6 +13,7 @@ CSS selectors, scraping assets like images, stylesheets, and other features.
 
 ### Installation
 Import the library into your project.
+
 `import "github.com/lostinblue/surf"`
 
 
