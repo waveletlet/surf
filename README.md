@@ -13,7 +13,7 @@ CSS selectors, scraping assets like images, stylesheets, and other features.
 
 ### Installation
 Import the library into your project.
-`import "gopkg.in/lostinblue/surf"`
+`import "github.com/lostinblue/surf"`
 
 
 ### Quick Start
@@ -21,7 +21,7 @@ Import the library into your project.
 package main
 
 import (
-	"gopkg.in/lostinblue/surf"
+	"github.com/lostinblue/surf"
 	"fmt"
 )
 
