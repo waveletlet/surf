@@ -12,6 +12,8 @@ import (
 	"os"
 	"strings"
 	"time"
+	
+	"golang.org/x/net/proxy"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/lostinblue/surf/errors"
@@ -93,6 +95,9 @@ type Browsable interface {
 	// SetTransport sets the http library transport mechanism for each request.
 	SetTransport(rt http.RoundTripper)
 
+	// SetProxy sets the proxy used by the browser
+	SetProxy(u string) (err error)
+	
 	// AddRequestHeader adds a header the browser sends with each request.
 	AddRequestHeader(name, value string)
 
@@ -549,6 +554,21 @@ func (bow *Browser) SetTransport(rt http.RoundTripper) {
 		bow.client = bow.buildClient()
 	}
 	bow.client.Transport = rt
+}
+
+// SetProxy allows the use of socks proxies, for example it can be used to connect using Tor.
+func (bow *Browser) SetProxy(u string) (err error) {
+	_url, err := url.Parse(u)
+	if err != nil {
+		return err
+	}
+	dialer, err := proxy.FromURL(_url, proxy.Direct)
+	if err != nil {
+		return err
+	}
+	bow.SetTransport(&http.Transport{Dial: dialer.Dial})
+
+	return err
 }
 
 // AddRequestHeader sets a header the browser sends with each request.
