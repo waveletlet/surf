@@ -40,6 +40,5 @@ func NewBrowser() *browser.Browser {
 		browser.MetaRefreshHandling: DefaultMetaRefreshHandling,
 		browser.FollowRedirects:     DefaultFollowRedirects,
 	})
-
 	return bow
 }
