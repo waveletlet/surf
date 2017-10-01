@@ -15,9 +15,9 @@ import (
 
 var (
 	// Name is the name of the browser.
-	Name = "firefox"
+	Name = "Chrome"
 	// Version is the browser version.
-	Version = "31.0"
+	Version = "37.0.2049.0"
 	// OSName is the operating system name.
 	OSName = osName()
 	// OSVersion is the operating system version.
