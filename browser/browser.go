@@ -94,7 +94,7 @@ type Browsable interface {
 	SetTimeout(t time.Duration)
 
 	// Get Timeout returns the value of the private timeout attribute
-	Timeout() time.Duration)
+	Timeout() time.Duration
 
 	// SetTransport sets the http library transport mechanism for each request.
 	SetTransport(rt http.RoundTripper)
