@@ -55,6 +55,7 @@ var InitialAssetsSliceSize = 20
 type Browsable interface {
 	// SetUserAgent sets the user agent.
 	SetUserAgent(ua string)
+	UserAgent() string
 
 	// SetAttribute sets a browser instruction attribute.
 	SetAttribute(a Attribute, v bool)
@@ -509,6 +510,10 @@ func (bow *Browser) Click(expr string) error {
 				// SetUserAgent sets the user agent.
 				func (bow *Browser) SetUserAgent(userAgent string) {
 					bow.userAgent = userAgent
+				}
+
+				func (bow *Browser) UserAgent() string {
+					return bow.userAgent
 				}
 
 				// SetAttribute sets a browser instruction attribute.
