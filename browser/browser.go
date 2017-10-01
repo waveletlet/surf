@@ -185,7 +185,7 @@ type Browsable interface {
 	// ResponseHeaders returns the page headers.
 	ResponseHeaders() http.Header
 
-  // RequestHeaders return the client request headers
+	// RequestHeaders return the client request headers
 	RequestHeaders() http.Header
 
 	// Body returns the page body as a string of html.
@@ -553,6 +553,7 @@ func (bow *Browser) SetTimeout(t time.Duration) {
 	bow.timeout = t
 }
 
+// Timeout gets the timeout value for requests.
 func (bow *Browser) Timeout() time.Duration {
 	return bow.timeout
 }
@@ -637,6 +638,11 @@ func (bow *Browser) Title() string {
 
 // ResponseHeaders returns the page headers.
 func (bow *Browser) ResponseHeaders() http.Header {
+	return bow.state.Response.Header
+}
+
+// RequestHeaders returns the client headers.
+func (bow *Browser) RequestHeaders() http.Header {
 	return bow.state.Response.Header
 }
 
