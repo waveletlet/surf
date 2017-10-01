@@ -65,6 +65,9 @@ type Browsable interface {
 	// SetAttributes is used to set all the browser attributes.
 	SetAttributes(a AttributeMap)
 
+	// Get Attribute value from Attribute
+	Attribute(a Attribute) bool
+
 	// SetState sets the init browser state.
 	SetState(sj *jar.State)
 
@@ -522,6 +525,11 @@ func (bow *Browser) SetAttributes(a AttributeMap) {
 	bow.attributes = a
 }
 
+// Get Attribute value from Attribute
+func (bow *Browser) Attribute(a Attribute) bool {
+	return bow.attributes[a]
+}
+
 // SetBookmarksJar sets the bookmarks jar the browser uses.
 func (bow *Browser) SetBookmarksJar(bj jar.BookmarksJar) {
 	bow.bookmarks = bj
@@ -579,6 +587,10 @@ func (bow *Browser) SetProxy(u string) (err error) {
 	bow.SetTransport(&http.Transport{Dial: dialer.Dial})
 
 	return err
+}
+
+func (bow *Browser) Proxy() string {
+	return "not implemented"
 }
 
 // AddRequestHeader sets a header the browser sends with each request.
