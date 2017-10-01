@@ -91,14 +91,18 @@ type Browsable interface {
 
 	// SetTimeout sets the timeout for requests.
 	SetTimeout(t time.Duration)
-	GetTimeout() time.Duration)
+
+	// Get Timeout returns the value of the private timeout attribute
+	Timeout() time.Duration)
 
 	// SetTransport sets the http library transport mechanism for each request.
 	SetTransport(rt http.RoundTripper)
 
 	// SetProxy sets the proxy used by the browser
 	SetProxy(u string) (err error)
-  GetProxy() string
+
+	// Get Proxy returns the proxy details
+  Proxy() string
 
 	// AddRequestHeader adds a header the browser sends with each request.
 	AddRequestHeader(name, value string)
@@ -177,6 +181,8 @@ type Browsable interface {
 
 	// ResponseHeaders returns the page headers.
 	ResponseHeaders() http.Header
+
+  // #TODO: Request headers may be necessary too
 
 	// Body returns the page body as a string of html.
 	Body() string
