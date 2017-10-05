@@ -206,6 +206,9 @@ type Browsable interface {
 	// Create a new Browser instance and inherit the configuration
 	// Read more: https://github.com/headzoo/surf/issues/23
 	NewTab() (b *Browser)
+
+	// Create a new Otto Javascript VM.
+	NewJSVM()
 }
 
 // Browser is the default Browser implementation.
@@ -696,6 +699,10 @@ func (bow *Browser) NewTab() (b *Browser) {
 	return b
 }
 
+func (bow *Browser) NewJSVM() {
+	bow.jsVM = otto.New()
+}
+
 // buildRequest creates and returns a *http.Request type.
 // Sets any headers that need to be sent with the request.
 func (bow *Browser) buildRequest(method, url string, ref *url.URL, body io.Reader) (*http.Request, error) {
@@ -829,40 +836,37 @@ func (bow *Browser) shouldRedirect(req *http.Request, _ []*http.Request) error {
 		req.Header.Set("User-Agent", bow.userAgent)
 		return nil
 	}
-	return errors.NewLocation(
-		"Redirects are disabled. Cannot follow '%s'.", req.URL.String())
+	return errors.NewLocation("Redirects are disabled. Cannot follow '%s'.", req.URL.String())
+}
+
+// attributeToUrl reads an attribute from an element and returns a url.
+func (bow *Browser) attrToResolvedUrl(name string, sel *goquery.Selection) (*url.URL, error) {
+	src, ok := sel.Attr(name)
+	if !ok {
+		return nil, errors.NewAttributeNotFound("Attribute '%s' not found.", name)
+	}
+	ur, err := url.Parse(src)
+	if err != nil {
+		return nil, err
 	}
 
-	// attributeToUrl reads an attribute from an element and returns a url.
-	func (bow *Browser) attrToResolvedUrl(name string, sel *goquery.Selection) (*url.URL, error) {
-		src, ok := sel.Attr(name)
-		if !ok {
-			return nil, errors.NewAttributeNotFound(
-				"Attribute '%s' not found.", name)
-			}
-			ur, err := url.Parse(src)
-			if err != nil {
-				return nil, err
-			}
+	return bow.ResolveUrl(ur), nil
+}
 
-			return bow.ResolveUrl(ur), nil
-		}
+// attributeOrDefault reads an attribute and returns it or the default value when it's empty.
+func (bow *Browser) attrOrDefault(name, def string, sel *goquery.Selection) string {
+	a, ok := sel.Attr(name)
+	if ok {
+		return a
+	}
+	return def
+}
 
-		// attributeOrDefault reads an attribute and returns it or the default value when it's empty.
-		func (bow *Browser) attrOrDefault(name, def string, sel *goquery.Selection) string {
-			a, ok := sel.Attr(name)
-			if ok {
-				return a
-			}
-			return def
-		}
-
-		// isContentTypeHtml returns true when the given response sent the "text/html" content type.
-		func isContentTypeHtml(res *http.Response) bool {
-			if res != nil {
-				ct := res.Header.Get("Content-Type")
-				return ct == "" || strings.Contains(ct, "text/html")
-			}
-			return false
-		}
-
+// isContentTypeHtml returns true when the given response sent the "text/html" content type.
+func isContentTypeHtml(res *http.Response) bool {
+	if res != nil {
+		ct := res.Header.Get("Content-Type")
+		return ct == "" || strings.Contains(ct, "text/html")
+	}
+	return false
+}

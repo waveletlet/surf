@@ -26,9 +26,7 @@ var (
 
 // NewBrowser creates and returns a *browser.Browser type.
 func NewBrowser() *browser.Browser {
-	bow := &browser.Browser{
-		jsVM: otto.New(),
-	}
+	bow := &browser.Browser{}
 	bow.SetUserAgent(DefaultUserAgent)
 	bow.SetState(&jar.State{})
 	bow.SetCookieJar(jar.NewMemoryCookies())
@@ -37,6 +35,7 @@ func NewBrowser() *browser.Browser {
 	hist.SetMax(DefaultMaxHistoryLength)
 	bow.SetHistoryJar(hist)
 	bow.SetHeadersJar(jar.NewMemoryHeaders())
+	bow.NewJSVM()
 	bow.SetAttributes(browser.AttributeMap{
 		browser.SendReferer:         DefaultSendReferer,
 		browser.MetaRefreshHandling: DefaultMetaRefreshHandling,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/robertkrimen/otto"
+	//"github.com/robertkrimen/otto/parser" - Checkout the parser module, may be useful for intergration into surf
 )
 
 // Parser is a simple HTML parser
@@ -14,7 +15,7 @@ type Parser struct {
 	results map[string][]string
 }
 
-func registerVM(vm *Browser.jsVM) otto.Value {
+func registerVM(vm *otto.Otto) otto.Value {
 	obj, _ := vm.Object("({})")
 
 	obj.Set("newDocument", func(c otto.FunctionCall) otto.Value {
