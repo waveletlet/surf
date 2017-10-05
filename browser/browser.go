@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"golang.org/x/net/proxy"
-
+  "github.com/robertkrimen/otto"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/lostinblue/surf/errors"
 	"github.com/lostinblue/surf/jar"
@@ -188,8 +188,11 @@ type Browsable interface {
 	// ResponseHeaders returns the page headers.
 	ResponseHeaders() http.Header
 
-	// RequestHeaders return the client request headers
+	// RequestHeaders return the client request headers.
 	RequestHeaders() http.Header
+
+	// HTML returns the HTML tag as a string of html.
+	HTML() string
 
 	// Body returns the page body as a string of html.
 	Body() string
@@ -209,6 +212,9 @@ type Browsable interface {
 type Browser struct {
 	// HTTP client
 	client *http.Client
+
+  // Javascript VM
+	jsVM *otto.Otto
 
 	// state is the current browser state.
 	state *jar.State
@@ -230,6 +236,9 @@ type Browser struct {
 
 	// refresh is a timer used to meta refresh pages.
 	refresh *time.Timer
+
+  // all html of the current page.
+	html []byte
 
 	// body of the current page.
 	body []byte
@@ -656,6 +665,12 @@ func (bow *Browser) ResponseHeaders() http.Header {
 // RequestHeaders returns the client headers.
 func (bow *Browser) RequestHeaders() http.Header {
 	return bow.state.Response.Header
+}
+
+// HTML tag returns the page as a string of html.
+func (bow *Browser) HTML() string {
+	html, _ := bow.state.Dom.Find("html").Html()
+	return html
 }
 
 // Body returns the page body as a string of html.

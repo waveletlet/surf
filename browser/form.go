@@ -14,7 +14,11 @@ import (
 // Submittable represents an element that may be submitted, such as a form.
 type Submittable interface {
 	Method() string
+	SetMethod(methodType string)
+
 	Action() string
+	SetAction(actionURL string)
+
 	Input(name, value string) error
 	Set(name, value string) error
 
@@ -66,9 +70,11 @@ type Submittable interface {
 	// SetFile sets the value for a form input type file.
 	// It will add the field to the form if necessary
 	SetFile(name string, fileName string, data io.Reader)
-	
+
 	Buttons() url.Values
-	
+
+	Button(name string) bool
+
 	Click(button string) error
 	ClickByValue(name, value string) error
 	Submit() error
@@ -111,11 +117,20 @@ func (f *Form) Method() string {
 	return f.method
 }
 
+func (f *Form) SetMethod(methodType string) {
+	f.method =  methodType
+}
+
 // Action returns the form action URL.
 // The URL will always be absolute.
 func (f *Form) Action() string {
 	return f.action
 }
+
+func (f *Form) SetAction(actionURL string) {
+	f.action = actionURL
+}
+
 
 // Input sets the value of a form field.
 // it returns an ElementNotFound error if the field does not exist
@@ -135,8 +150,7 @@ func (f *Form) File(name string, fileName string, data io.Reader) error {
 		f.files[name] = &File{fileName: fileName, data: data}
 		return nil
 	}
-	return errors.NewElementNotFound(
-		"No input type 'file' found with name '%s'.", name)
+	return errors.NewElementNotFound("No input type 'file' found with name '%s'.", name)
 }
 
 // SetFile sets the value for a form input type file.
@@ -289,6 +303,17 @@ func (f *Form) SelectLabels(name string) ([]string, error) {
 
 func (f *Form) Buttons() url.Values {
 	return f.buttons
+}
+
+func (f *Form) Button(name string) bool {
+	if len(f.buttons) > 0 {
+		for buttonName := range f.buttons {
+			if buttonName == name {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // Submit submits the form.
