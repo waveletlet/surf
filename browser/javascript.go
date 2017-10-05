@@ -1,6 +1,8 @@
 package browser
 
 import (
+	"bytes"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/robertkrimen/otto"
 )
@@ -12,16 +14,14 @@ type Parser struct {
 	results map[string][]string
 }
 
-func registerVM(vm *modules.JsVm) otto.Value {
+func registerVM(vm *Browser.jsVM) otto.Value {
 	obj, _ := vm.Object("({})")
 
 	obj.Set("newDocument", func(c otto.FunctionCall) otto.Value {
 		str, _ := c.Argument(0).ToString()
 		b := bytes.NewBufferString(str)
 		doc, _ := goquery.NewDocumentFromReader(b)
-		gDoc := GoQueryDoc{}
-		gDoc.doc = doc
-		val, _ := c.Otto.ToValue(&gDoc)
+		val, _ := c.Otto.ToValue(&doc)
 		return val
 	})
 
