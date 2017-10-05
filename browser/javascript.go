@@ -69,4 +69,5 @@ func (p *Parser) get(el, key string) EachFunc {
 		if v, ok := s.Attr(el); ok {
 			p.results[key] = append(p.results[key], v)
 		}
+	}
 }
