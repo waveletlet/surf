@@ -8,6 +8,10 @@ import (
 	//"github.com/robertkrimen/otto/parser" - Checkout the parser module, may be useful for intergration into surf
 )
 
+//# TODO: Review best examples
+//https://github.com/emptyinterface/sq/blob/ae41c8755631006291f50f2b6eb42567e2ca050f/funcs.go
+//https://github.com/beyondblog/wechat-spider/blob/aa10552c8eac551b58b2862bf61f33b94639ab2a/spider/spider.go
+
 // Parser is a simple HTML parser
 type Parser struct {
 	ctx     *otto.Otto
