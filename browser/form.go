@@ -64,7 +64,9 @@ type Submittable interface {
 	// SetFile sets the value for a form input type file.
 	// It will add the field to the form if necessary
 	SetFile(name string, fileName string, data io.Reader)
-
+	
+	Buttons() url.Values
+	
 	Click(button string) error
 	ClickByValue(name, value string) error
 	Submit() error
@@ -276,6 +278,10 @@ func (f *Form) SelectLabels(name string) ([]string, error) {
 	return labels, nil
 }
 
+func (f *Form) Submit() url.Values {
+	return f.buttons
+}
+	
 // Submit submits the form.
 // Clicks the first button in the form, or submits the form without using
 // any button when the form does not contain any buttons.
