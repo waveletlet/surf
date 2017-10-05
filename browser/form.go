@@ -278,7 +278,7 @@ func (f *Form) SelectLabels(name string) ([]string, error) {
 	return labels, nil
 }
 
-func (f *Form) Submit() url.Values {
+func (f *Form) Buttons() url.Values {
 	return f.buttons
 }
 	
