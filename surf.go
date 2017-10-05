@@ -26,7 +26,9 @@ var (
 
 // NewBrowser creates and returns a *browser.Browser type.
 func NewBrowser() *browser.Browser {
-	bow := &browser.Browser{}
+	bow := &browser.Browser{
+		jsVM: otto.New(),
+	}
 	bow.SetUserAgent(DefaultUserAgent)
 	bow.SetState(&jar.State{})
 	bow.SetCookieJar(jar.NewMemoryCookies())
