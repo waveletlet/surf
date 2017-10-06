@@ -2,6 +2,8 @@ Surf
 ====
 **This is a custom fork for testing experimental features that may become pull requests, you should look at the base repository.**
 
+This repository is no longer compliant with the original surf API, and can no longer be used as a drop in surf replacement.
+
 Surf is a Go (golang) library that implements a virtual web browser that you control programmatically.
 Surf isn't just another Go solution for downloading content from the web. Surf is designed to behave
 like web browser, and includes: cookie management, history, bookmarking, user agent spoofing
@@ -27,14 +29,14 @@ import (
 )
 
 func main() {
-	bow := surf.NewBrowser()
-	err := bow.Open("http://golang.org")
+	browser := surf.NewBrowser()
+	err := browser.GET("http://golang.org")
 	if err != nil {
 		panic(err)
 	}
 
 	// Outputs: "The Go Programming Language"
-	fmt.Println(bow.Title())
+	fmt.Println(browser.Title())
 }
 ```
 

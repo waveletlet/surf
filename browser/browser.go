@@ -2,9 +2,9 @@ package browser
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
@@ -114,10 +114,13 @@ type Browsable interface {
 	AddRequestHeader(name, value string)
 
 	// Open requests the given URL using the GET method.
-	Open(url string) error
+	GET(url string) error
 
 	// Open requests the given URL using the HEAD method.
-	Head(url string) error
+	HEAD(url string) error
+
+	// Post requests the given URL using the POST method.
+	POST(url string, contentType string, body io.Reader) error
 
 	// OpenForm appends the data values to the given URL and sends a GET request.
 	OpenForm(url string, data url.Values) error
@@ -125,14 +128,12 @@ type Browsable interface {
 	// OpenBookmark calls Get() with the URL for the bookmark with the given name.
 	OpenBookmark(name string) error
 
-	// Post requests the given URL using the POST method.
-	Post(url string, contentType string, body io.Reader) error
 
 	// PostForm requests the given URL using the POST method with the given data.
-	PostForm(url string, data url.Values) error
+	POSTForm(url string, data url.Values) error
 
 	// PostMultipart requests the given URL using the POST method with the given data using multipart/form-data format.
-	PostMultipart(u string, fields url.Values, files FileSet) error
+	POSTMultipart(u string, fields url.Values, files FileSet) error
 
 	// Back loads the previously requested page.
 	Back() bool
@@ -167,17 +168,17 @@ type Browsable interface {
 	// SiteCookies returns the cookies for the current site.
 	SiteCookies() []*http.Cookie
 
-	// ResolveUrl returns an absolute URL for a possibly relative URL.
-	ResolveUrl(u *url.URL) *url.URL
+	// ResolveURL returns an absolute URL for a possibly relative URL.
+	ResolveURL(u *url.URL) *url.URL
 
-	// ResolveStringUrl works just like ResolveUrl, but the argument and return value are strings.
-	ResolveStringUrl(u string) (string, error)
+	// ResolveStringURL works just like ResolveURL, but the argument and return value are strings.
+	ResolveStringURL(u string) (string, error)
 
 	// Download writes the contents of the document to the given writer.
 	Download(o io.Writer) (int64, error)
 
-	// Url returns the page URL as a string.
-	Url() *url.URL
+	// URL returns the page URL as a string.
+	URL() *url.URL
 
 	// StatusCode returns the response status code.
 	StatusCode() int
@@ -208,7 +209,7 @@ type Browsable interface {
 	NewTab() (b *Browser)
 
 	// Create a new Otto Javascript VM.
-	NewJSVM()
+	NewJavaScriptVM()
 }
 
 // Browser is the default Browser implementation.
@@ -217,7 +218,7 @@ type Browser struct {
 	client *http.Client
 
 	// Javascript VM
-	jsVM *otto.Otto
+	javaScriptVM *otto.Otto
 
 	// state is the current browser state.
 	state *jar.State
@@ -257,8 +258,8 @@ func (bow *Browser) buildClient() *http.Client {
 	}
 }
 
-// Open requests the given URL using the GET method.
-func (bow *Browser) Open(u string) error {
+// GET requests the given URL using the GET method.
+func (bow *Browser) GET(u string) error {
 	ur, err := url.Parse(u)
 	if err != nil {
 		return err
@@ -267,7 +268,7 @@ func (bow *Browser) Open(u string) error {
 }
 
 // Head requests the given URL using the HEAD method.
-func (bow *Browser) Head(u string) error {
+func (bow *Browser) HEAD(u string) error {
 	ur, err := url.Parse(u)
 	if err != nil {
 		return err
@@ -275,41 +276,41 @@ func (bow *Browser) Head(u string) error {
 	return bow.httpHEAD(ur, nil)
 }
 
-// OpenForm appends the data values to the given URL and sends a GET request.
-func (bow *Browser) OpenForm(u string, data url.Values) error {
+// GETForm appends the data values to the given URL and sends a GET request.
+func (bow *Browser) GETForm(u string, data url.Values) error {
 	ul, err := url.Parse(u)
 	if err != nil {
 		return err
 	}
 	ul.RawQuery = data.Encode()
-	return bow.Open(ul.String())
+	return bow.GET(ul.String())
 }
 
-// OpenBookmark calls Open() with the URL for the bookmark with the given name.
-func (bow *Browser) OpenBookmark(name string) error {
+// GETBookmark calls GET() with the URL for the bookmark with the given name.
+func (bow *Browser) GETBookmark(name string) error {
 	url, err := bow.bookmarks.Read(name)
 	if err != nil {
 		return err
 	}
-	return bow.Open(url)
+	return bow.GET(url)
 }
 
-// Post requests the given URL using the POST method.
-func (bow *Browser) Post(u string, contentType string, body io.Reader) error {
+// POST requests the given URL using the POST method.
+func (bow *Browser) POST(u string, contentType string, body io.Reader) error {
 	ur, err := url.Parse(u)
 	if err != nil {
 		return err
 	}
-	return bow.httpPOST(ur, bow.Url(), contentType, body)
+	return bow.httpPOST(ur, bow.URL(), contentType, body)
 }
 
-// PostForm requests the given URL using the POST method with the given data.
-func (bow *Browser) PostForm(u string, data url.Values) error {
+// POSTForm requests the given URL using the POST method with the given data.
+func (bow *Browser) POSTForm(u string, data url.Values) error {
 	return bow.Post(u, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
 }
 
-// PostMultipart requests the given URL using the POST method with the given data using multipart/form-data format.
-func (bow *Browser) PostMultipart(u string, fields url.Values, files FileSet) error {
+// POSTMultipart requests the given URL using the POST method with the given data using multipart/form-data format.
+func (bow *Browser) POSTMultipart(u string, fields url.Values, files FileSet) error {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
@@ -360,7 +361,7 @@ func (bow *Browser) Reload() error {
 
 // Bookmark saves the page URL in the bookmarks with the given name.
 func (bow *Browser) Bookmark(name string) error {
-	return bow.bookmarks.Save(name, bow.ResolveUrl(bow.Url()).String())
+	return bow.bookmarks.Save(name, bow.ResolveURL(bow.URL()).String())
 }
 
 // Click clicks on the page element matched by the given expression.
@@ -377,12 +378,12 @@ func (bow *Browser) Click(expr string) error {
 	if !sel.Is("a") {
 		return errors.NewElementNotFound("Expr '%s' must match an anchor tag.", expr)
 	}
-	href, err := bow.attrToResolvedUrl("href", sel)
+	href, err := bow.attrToResolvedURL("href", sel)
 	if err != nil {
 		return err
 	}
 
-	return bow.httpGET(href, bow.Url())
+	return bow.httpGET(href, bow.URL())
 }
 
 // Form returns the form in the current page that matches the given expr.
@@ -416,7 +417,7 @@ func (bow *Browser) Forms() []Submittable {
 func (bow *Browser) Links() []*Link {
 	links := make([]*Link, 0, InitialAssetsSliceSize)
 	bow.Find("a").Each(func(_ int, s *goquery.Selection) {
-		href, err := bow.attrToResolvedUrl("href", s)
+		href, err := bow.attrToResolvedURL("href", s)
 		if err == nil {
 			links = append(links, NewLinkAsset(
 				href,
@@ -433,7 +434,7 @@ func (bow *Browser) Links() []*Link {
 func (bow *Browser) Images() []*Image {
 	images := make([]*Image, 0, InitialAssetsSliceSize)
 	bow.Find("img").Each(func(_ int, s *goquery.Selection) {
-		src, err := bow.attrToResolvedUrl("src", s)
+		src, err := bow.attrToResolvedURL("src", s)
 		if err == nil {
 			images = append(images, NewImageAsset(
 				src,
@@ -453,7 +454,7 @@ func (bow *Browser) Stylesheets() []*Stylesheet {
 	bow.Find("link").Each(func(_ int, s *goquery.Selection) {
 		rel, ok := s.Attr("rel")
 		if ok && rel == "stylesheet" {
-			href, err := bow.attrToResolvedUrl("href", s)
+			href, err := bow.attrToResolvedURL("href", s)
 			if err == nil {
 				stylesheets = append(stylesheets, NewStylesheetAsset(
 					href,
@@ -471,15 +472,16 @@ func (bow *Browser) Stylesheets() []*Stylesheet {
 // Scripts returns an array of every script linked to the document.
 func (bow *Browser) Scripts() []*Script {
 	//# TODO: Flag to download during Get so it can be processed
+	//# TODO: Include inline JS, combine it into a single JS file
 	scripts := make([]*Script, 0, InitialAssetsSliceSize)
 	bow.Find("script").Each(func(_ int, s *goquery.Selection) {
-		src, err := bow.attrToResolvedUrl("src", s)
+		src, err := bow.attrToResolvedURL("src", s)
 		if err == nil {
 			scripts = append(scripts, NewScriptAsset(
-				src,
-				bow.attrOrDefault("id", "", s),
-				bow.attrOrDefault("type", "text/javascript", s),
-			))
+						src,
+						bow.attrOrDefault("id", "", s),
+						bow.attrOrDefault("type", "text/javascript", s),
+						))
 		}
 	})
 
@@ -491,7 +493,7 @@ func (bow *Browser) SiteCookies() []*http.Cookie {
 	if bow.client == nil {
 		bow.client = bow.buildClient()
 	}
-	return bow.client.Jar.Cookies(bow.Url())
+	return bow.client.Jar.Cookies(bow.URL())
 }
 
 // SetState sets the browser state.
@@ -617,35 +619,43 @@ func (bow *Browser) DelRequestHeader(name string) {
 	bow.headers.Del(name)
 }
 
-// ResolveUrl returns an absolute URL for a possibly relative URL.
-func (bow *Browser) ResolveUrl(u *url.URL) *url.URL {
-	return bow.Url().ResolveReference(u)
+// ResolveURL returns an absolute URL for a possibly relative URL.
+func (bow *Browser) ResolveURL(u *url.URL) *url.URL {
+	return bow.URL().ResolveReference(u)
 }
 
-// ResolveStringUrl works just like ResolveUrl, but the argument and return value are strings.
-func (bow *Browser) ResolveStringUrl(u string) (string, error) {
-	pu, err := url.Parse(u)
+// ResolveStringURL works just like ResolveURL, but the argument and return value are strings.
+func (bow *Browser) ResolveStringURL(u string) (string, error) {
+	resolvedURL, err := url.Parse(u)
 	if err != nil {
 		return "", err
 	}
-	pu = bow.Url().ResolveReference(pu)
-	return pu.String(), nil
+	resolvedURL = bow.URL().ResolveReference(resolvedURL)
+	return resolvedURL.String(), nil
 }
 
 // Download writes the contents of the document to the given writer.
 func (bow *Browser) Download(o io.Writer) (int64, error) {
+	if o == nil {
+		//# TODO: If o is nil, should either throw an error explaining the issue or just initialize it
+	}
+	//# TODO: Check body if nil
 	buff := bytes.NewBuffer(bow.body)
+	//fmt.Fprintln(os.Stdout, "===== [DUMP buff] =====\n", buff)
+	//fmt.Fprintln(os.Stdout, "===== [DUMP bow.body] =====\n", bow.body)
 	return io.Copy(o, buff)
+	//return 0, errors.New("Failed to execut io.Copy(o, buff)")
 }
 
-// Url returns the page URL as a string.
-func (bow *Browser) Url() *url.URL {
+// URL returns the page URL as a string.
+func (bow *Browser) URL() *url.URL {
 	if bow.state.Response == nil {
+		//# TODO: Why not just return nil? Why check again?
 		// there is a possibility that we issued a request, but for
 		// whatever reason the request failed.
-		if bow.state.Request != nil {
-			return bow.state.Request.URL
-		}
+		//if bow.state.Request != nil {
+		//	return bow.state.Request.URL
+		//}
 		return nil
 	}
 
@@ -654,6 +664,14 @@ func (bow *Browser) Url() *url.URL {
 
 // StatusCode returns the response status code.
 func (bow *Browser) StatusCode() int {
+	// there is a possibility that we issued a request, but for
+	// whatever reason the request failed.
+	//# TODO: Since this is repeating, it may be necessary to add a specialized function, possibly in errors
+	//  and this issue exists at least in 5 other spots in the codebase
+	if bow.state.Response == nil {
+		// Since this is not a pointer, it needs a value
+		return 0
+	}
 	return bow.state.Response.StatusCode
 }
 
@@ -669,12 +687,13 @@ func (bow *Browser) ResponseHeaders() http.Header {
 
 // RequestHeaders returns the client headers.
 func (bow *Browser) RequestHeaders() http.Header {
-	return bow.state.Response.Header
+	//TODO: Gather REQUEST headers and return them
+	return nil
 }
 
-// HTML tag returns the page as a string of html.
+// HTML document as a string of html.
 func (bow *Browser) HTML() string {
-	html, _ := bow.state.Dom.Find("html").Html()
+	html, _ := bow.state.Dom.First().Html()
 	return html
 }
 
@@ -684,8 +703,8 @@ func (bow *Browser) Body() string {
 	return body
 }
 
-// Dom returns the inner *goquery.Selection.
-func (bow *Browser) Dom() *goquery.Document {
+// DOM returns the inner *goquery.Selection.
+func (bow *Browser) DOM() *goquery.Document {
 	return bow.state.Dom
 }
 
@@ -696,13 +715,13 @@ func (bow *Browser) Find(expr string) *goquery.Selection {
 
 func (bow *Browser) NewTab() (b *Browser) {
 	b = &Browser{}
+	//# TODO: Why use a pointer? and why this type of assignment?
 	*b = *bow
-
 	return b
 }
 
-func (bow *Browser) NewJSVM() {
-	bow.jsVM = otto.New()
+func (bow *Browser) NewJavaScriptVM() {
+	bow.javaScriptVM = otto.New()
 }
 
 // buildRequest creates and returns a *http.Request type.
@@ -743,6 +762,7 @@ func copyHeaders(h http.Header) http.Header {
 // httpGET makes an HTTP GET request for the given URL.
 // When via is not nil, and AttributeSendReferer is true, the Referer header will
 // be set to ref.
+//# TODO: Why does this exist, along with GET? Can this/should this be combined?
 func (bow *Browser) httpGET(u *url.URL, ref *url.URL) error {
 	req, err := bow.buildRequest("GET", u.String(), ref, nil)
 	if err != nil {
@@ -785,23 +805,26 @@ func (bow *Browser) httpRequest(req *http.Request) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	// If resp.Body.Close() is called on an empty, it will throw a nil pointer error
+	// if it is nil, then there is no reason to close it.
+	if resp.Body != nil {
+		defer resp.Body.Close()
 
-	bow.body, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
+		bow.body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		buff := bytes.NewBuffer(bow.body)
+		dom, err := goquery.NewDocumentFromReader(buff)
+		if err != nil {
+			return err
+		}
+
+		bow.history.Push(bow.state)
+		bow.state = jar.NewHistoryState(req, resp, dom)
+		bow.postSend()
 	}
-
-	buff := bytes.NewBuffer(bow.body)
-	dom, err := goquery.NewDocumentFromReader(buff)
-	if err != nil {
-		return err
-	}
-
-	bow.history.Push(bow.state)
-	bow.state = jar.NewHistoryState(req, resp, dom)
-	bow.postSend()
-
 	return nil
 }
 
@@ -841,8 +864,8 @@ func (bow *Browser) shouldRedirect(req *http.Request, _ []*http.Request) error {
 	return errors.NewLocation("Redirects are disabled. Cannot follow '%s'.", req.URL.String())
 }
 
-// attributeToUrl reads an attribute from an element and returns a url.
-func (bow *Browser) attrToResolvedUrl(name string, sel *goquery.Selection) (*url.URL, error) {
+// attributeToURL reads an attribute from an element and returns a url.
+func (bow *Browser) attrToResolvedURL(name string, sel *goquery.Selection) (*url.URL, error) {
 	src, ok := sel.Attr(name)
 	if !ok {
 		return nil, errors.NewAttributeNotFound("Attribute '%s' not found.", name)
@@ -852,7 +875,7 @@ func (bow *Browser) attrToResolvedUrl(name string, sel *goquery.Selection) (*url
 		return nil, err
 	}
 
-	return bow.ResolveUrl(ur), nil
+	return bow.ResolveURL(ur), nil
 }
 
 // attributeOrDefault reads an attribute and returns it or the default value when it's empty.

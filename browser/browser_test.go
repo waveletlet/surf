@@ -84,7 +84,7 @@ func TestRedirect(t *testing.T) {
 		return
 	}
 
-	if b.Url().String() != ts0.URL {
+	if b.URL().String() != ts0.URL {
 		t.Errorf("Error: Redirects are not being recorded?")
 		return
 	}

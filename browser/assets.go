@@ -44,11 +44,11 @@ type AsyncDownloadChannel chan *AsyncDownloadResult
 
 // Assetable represents a page asset, such as an image or stylesheet.
 type Assetable interface {
-	// Url returns the asset URL.
-	Url() *url.URL
+	// URL returns the asset URL.
+	URL() *url.URL
 
-	// Id returns the asset ID or an empty string when not available.
-	Id() string
+	// ID returns the asset ID or an empty string when not available.
+	ID() string
 
 	// Type describes the type of asset.
 	AssetType() AssetType
@@ -66,13 +66,13 @@ type Asset struct {
 	Type AssetType
 }
 
-// Url returns the asset URL.
-func (at *Asset) Url() *url.URL {
+// URL returns the asset URL.
+func (at *Asset) URL() *url.URL {
 	return at.URL
 }
 
-// Id returns the asset ID or an empty string when not available.
-func (at *Asset) Id() string {
+// ID returns the asset ID or an empty string when not available.
+func (at *Asset) ID() string {
 	return at.ID
 }
 
@@ -207,17 +207,22 @@ func NewScriptAsset(url *url.URL, id, typ string) *Script {
 }
 
 // DownloadAsset copies a remote file to the given writer.
+//# TODO: Should int64 be returned?
 func DownloadAsset(asset Downloadable, out io.Writer) (int64, error) {
-	resp, err := http.Get(asset.Url().String())
+	//# TODO: out may be nil, this needs a check
+	resp, err := http.Get(asset.URL().String())
 	if err != nil {
 		return 0, err
 	}
 	//# TODO: check if Body is nil before closing,
 	// since web requests are not always successful and the nil pointer
 	// error will be confusing to debug.
-	defer resp.Body.Close()
+	if resp.Body != nil {
+		defer resp.Body.Close()
 
-	return io.Copy(out, resp.Body)
+		return io.Copy(out, resp.Body)
+	}
+	return 0, nil
 }
 
 // DownloadAssetAsync downloads an asset asynchronously and notifies the given channel

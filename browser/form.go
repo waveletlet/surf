@@ -370,13 +370,13 @@ func (f *Form) Click(button string) error {
 				}
 				action, ok := f.selection.Attr("action")
 				if !ok {
-					action = f.bow.Url().String()
+					action = f.bow.URL().String()
 				}
 				aurl, err := url.Parse(action)
 				if err != nil {
 					return err
 				}
-				aurl = f.bow.ResolveUrl(aurl)
+				aurl = f.bow.ResolveURL(aurl)
 
 				values := make(url.Values, len(f.fields)+1)
 				for name, vals := range f.fields {
@@ -477,13 +477,13 @@ func (f *Form) Click(button string) error {
 				}
 				action, ok := s.Attr("action")
 				if !ok {
-					action = bow.Url().String()
+					action = bow.URL().String()
 				}
 				aurl, err := url.Parse(action)
 				if err != nil {
 					return "", ""
 				}
-				aurl = bow.ResolveUrl(aurl)
+				aurl = bow.ResolveURL(aurl)
 
 				return strings.ToUpper(method), aurl.String()
 			}

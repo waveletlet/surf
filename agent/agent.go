@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	//# TODO: Randomize realistic user-agents by default
 	// Name is the name of the browser.
 	Name = "Chrome"
 	// Version is the browser version.
