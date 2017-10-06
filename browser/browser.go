@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"golang.org/x/net/proxy"
-  "github.com/robertkrimen/otto"
+	"github.com/robertkrimen/otto"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/lostinblue/surf/errors"
 	"github.com/lostinblue/surf/jar"
@@ -197,8 +197,8 @@ type Browsable interface {
 	// Body returns the page body as a string of html.
 	Body() string
 
-	// Dom returns the inner *goquery.Selection.
-	Dom() *goquery.Selection
+	// Dom returns the inner *goquery.Document.
+	Dom() *goquery.Document
 
 	// Find returns the dom selections matching the given expression.
 	Find(expr string) *goquery.Selection
@@ -216,7 +216,7 @@ type Browser struct {
 	// HTTP client
 	client *http.Client
 
-  // Javascript VM
+	// Javascript VM
 	jsVM *otto.Otto
 
 	// state is the current browser state.
@@ -240,7 +240,7 @@ type Browser struct {
 	// refresh is a timer used to meta refresh pages.
 	refresh *time.Timer
 
-  // all html of the current page.
+	// all html of the current page.
 	html []byte
 
 	// body of the current page.
@@ -683,8 +683,8 @@ func (bow *Browser) Body() string {
 }
 
 // Dom returns the inner *goquery.Selection.
-func (bow *Browser) Dom() *goquery.Selection {
-	return bow.state.Dom.First()
+func (bow *Browser) Dom() *goquery.Document {
+	return bow.state.Dom
 }
 
 // Find returns the dom selections matching the given expression.
