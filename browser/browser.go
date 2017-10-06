@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"golang.org/x/net/proxy"
-  "github.com/robertkrimen/otto"
+  	"github.com/robertkrimen/otto"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/lostinblue/surf/errors"
 	"github.com/lostinblue/surf/jar"
@@ -368,6 +368,7 @@ func (bow *Browser) Bookmark(name string) error {
 // Currently this is only useful for click on links, which will cause the browser
 // to load the page pointed at by the link. Future versions of Surf may support
 // JavaScript and clicking on elements will fire the click event.
+//# TODO: Implement Javascript clicking with otto
 func (bow *Browser) Click(expr string) error {
 	sel := bow.Find(expr)
 	if sel.Length() == 0 {
@@ -469,6 +470,7 @@ func (bow *Browser) Stylesheets() []*Stylesheet {
 
 // Scripts returns an array of every script linked to the document.
 func (bow *Browser) Scripts() []*Script {
+	//# TODO: Flag to download during Get so it can be processed
 	scripts := make([]*Script, 0, InitialAssetsSliceSize)
 	bow.Find("script").Each(func(_ int, s *goquery.Selection) {
 		src, err := bow.attrToResolvedUrl("src", s)
