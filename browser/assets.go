@@ -212,6 +212,9 @@ func DownloadAsset(asset Downloadable, out io.Writer) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	//# TODO: check if Body is nil before closing,
+	// since web requests are not always successful and the nil pointer
+	// error will be confusing to debug.
 	defer resp.Body.Close()
 
 	return io.Copy(out, resp.Body)
