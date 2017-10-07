@@ -113,24 +113,23 @@ type Browsable interface {
 	// AddRequestHeader adds a header the browser sends with each request.
 	AddRequestHeader(name, value string)
 
-	// Open requests the given URL using the GET method.
-	GET(url string) error
+	// GET requests the given URL using the GET method.
+	GET(u string) error
 
-	// Open requests the given URL using the HEAD method.
-	HEAD(url string) error
+	// HEAD requests the given URL using the HEAD method.
+	HEAD(u string) error
 
-	// Post requests the given URL using the POST method.
-	POST(url string, contentType string, body io.Reader) error
+	// POST requests the given URL using the POST method.
+	POST(u string, contentType string, body io.Reader) error
 
-	// OpenForm appends the data values to the given URL and sends a GET request.
-	OpenForm(url string, data url.Values) error
+	// GETForm appends the data values to the given URL and sends a GET request.
+	GETForm(u string, data url.Values) error
 
 	// OpenBookmark calls Get() with the URL for the bookmark with the given name.
 	OpenBookmark(name string) error
 
-
 	// PostForm requests the given URL using the POST method with the given data.
-	POSTForm(url string, data url.Values) error
+	POSTForm(u string, data url.Values) error
 
 	// PostMultipart requests the given URL using the POST method with the given data using multipart/form-data format.
 	POSTMultipart(u string, fields url.Values, files FileSet) error
@@ -198,17 +197,17 @@ type Browsable interface {
 	// Body returns the page body as a string of html.
 	Body() string
 
-	// Dom returns the inner *goquery.Document.
-	Dom() *goquery.Document
+	// DOM returns the inner *goquery.Document.
+	DOM() *goquery.Document
 
 	// Find returns the dom selections matching the given expression.
 	Find(expr string) *goquery.Selection
 
-	// Create a new Browser instance and inherit the configuration
+	// NewTab returns a new Browser instance and inherit the configuration
 	// Read more: https://github.com/headzoo/surf/issues/23
-	NewTab() (b *Browser)
+	NewTab() (bow *Browser)
 
-	// Create a new Otto Javascript VM.
+	// NewJavaScriptVM returns a new Otto Javascript VM.
 	NewJavaScriptVM()
 }
 
@@ -260,48 +259,48 @@ func (bow *Browser) buildClient() *http.Client {
 
 // GET requests the given URL using the GET method.
 func (bow *Browser) GET(u string) error {
-	ur, err := url.Parse(u)
+	parsedURL, err := url.Parse(u)
 	if err != nil {
 		return err
 	}
-	return bow.httpGET(ur, nil)
+	return bow.httpGET(parsedURL, nil)
 }
 
-// Head requests the given URL using the HEAD method.
+// HEAD requests the given URL using the HEAD method.
 func (bow *Browser) HEAD(u string) error {
-	ur, err := url.Parse(u)
+	parsedURL, err := url.Parse(u)
 	if err != nil {
 		return err
 	}
-	return bow.httpHEAD(ur, nil)
+	return bow.httpHEAD(parsedURL, nil)
 }
 
 // GETForm appends the data values to the given URL and sends a GET request.
 func (bow *Browser) GETForm(u string, data url.Values) error {
-	ul, err := url.Parse(u)
+	parsedURL, err := url.Parse(u)
 	if err != nil {
 		return err
 	}
-	ul.RawQuery = data.Encode()
-	return bow.GET(ul.String())
+	parsedURL.RawQuery = data.Encode()
+	return bow.GET(parsedURL.String())
 }
 
-// GETBookmark calls GET() with the URL for the bookmark with the given name.
-func (bow *Browser) GETBookmark(name string) error {
-	url, err := bow.bookmarks.Read(name)
+// OpenBookmark calls GET() with the URL for the bookmark with the given name.
+func (bow *Browser) OpenBookmark(name string) error {
+	bookmarkURL, err := bow.bookmarks.Read(name)
 	if err != nil {
 		return err
 	}
-	return bow.GET(url)
+	return bow.GET(bookmarkURL)
 }
 
 // POST requests the given URL using the POST method.
 func (bow *Browser) POST(u string, contentType string, body io.Reader) error {
-	ur, err := url.Parse(u)
+	parsedURL, err := url.Parse(u)
 	if err != nil {
 		return err
 	}
-	return bow.httpPOST(ur, bow.URL(), contentType, body)
+	return bow.httpPOST(parsedURL, bow.URL(), contentType, body)
 }
 
 // POSTForm requests the given URL using the POST method with the given data.
@@ -361,6 +360,7 @@ func (bow *Browser) Reload() error {
 
 // Bookmark saves the page URL in the bookmarks with the given name.
 func (bow *Browser) Bookmark(name string) error {
+	//# TODO: Resolve seems redundant when URL is only loaded upon succsesful page load
 	return bow.bookmarks.Save(name, bow.ResolveURL(bow.URL()).String())
 }
 
@@ -592,11 +592,11 @@ func (bow *Browser) SetTransport(rt http.RoundTripper) {
 
 // SetProxy allows the use of socks proxies, for example it can be used to connect using Tor.
 func (bow *Browser) SetProxy(u string) (err error) {
-	_url, err := url.Parse(u)
+	parsedURL, err := url.Parse(u)
 	if err != nil {
 		return err
 	}
-	dialer, err := proxy.FromURL(_url, proxy.Direct)
+	dialer, err := proxy.FromURL(parsedURL, proxy.Direct)
 	if err != nil {
 		return err
 	}
@@ -626,11 +626,11 @@ func (bow *Browser) ResolveURL(u *url.URL) *url.URL {
 
 // ResolveStringURL works just like ResolveURL, but the argument and return value are strings.
 func (bow *Browser) ResolveStringURL(u string) (string, error) {
-	resolvedURL, err := url.Parse(u)
+	parsedURL, err := url.Parse(u)
 	if err != nil {
 		return "", err
 	}
-	resolvedURL = bow.URL().ResolveReference(resolvedURL)
+	resolvedURL = bow.URL().ResolveReference(parsedURL)
 	return resolvedURL.String(), nil
 }
 
@@ -638,6 +638,7 @@ func (bow *Browser) ResolveStringURL(u string) (string, error) {
 func (bow *Browser) Download(o io.Writer) (int64, error) {
 	if o == nil {
 		//# TODO: If o is nil, should either throw an error explaining the issue or just initialize it
+		fmt.Fprintln(os.Stdout, "===== [o io.Writer is nil] =====\n")
 	}
 	//# TODO: Check body if nil
 	buff := bytes.NewBuffer(bow.body)
@@ -726,8 +727,8 @@ func (bow *Browser) NewJavaScriptVM() {
 
 // buildRequest creates and returns a *http.Request type.
 // Sets any headers that need to be sent with the request.
-func (bow *Browser) buildRequest(method, url string, ref *url.URL, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, url, body)
+func (bow *Browser) buildRequest(method, u string, ref *url.URL, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, u, body)
 	if err != nil {
 		return nil, err
 	}
@@ -795,7 +796,7 @@ func (bow *Browser) httpPOST(u *url.URL, ref *url.URL, contentType string, body 
 	return bow.httpRequest(req)
 }
 
-// send uses the given *http.Request to make an HTTP request.
+// httpRequest uses the given *http.Request to make an HTTP request.
 func (bow *Browser) httpRequest(req *http.Request) error {
 	if bow.client == nil {
 		bow.client = bow.buildClient()
@@ -870,12 +871,12 @@ func (bow *Browser) attrToResolvedURL(name string, sel *goquery.Selection) (*url
 	if !ok {
 		return nil, errors.NewAttributeNotFound("Attribute '%s' not found.", name)
 	}
-	ur, err := url.Parse(src)
+	parsedURL, err := url.Parse(src)
 	if err != nil {
 		return nil, err
 	}
 
-	return bow.ResolveURL(ur), nil
+	return bow.ResolveURL(parsedURL), nil
 }
 
 // attributeOrDefault reads an attribute and returns it or the default value when it's empty.

@@ -24,6 +24,7 @@ func newDefaultTestBrowser() *Browser {
 		MetaRefreshHandling: true,
 		FollowRedirects:     true,
 	})
+	bow.NewJavaScriptVM()
 	return bow
 }
 
@@ -134,7 +135,6 @@ func TestCookieHeader(t *testing.T) {
 	if err := b.Open(ts.URL + "/"); err != nil {
 		t.Fatal(err)
 	}
-
 	if want := 3; calls != want {
 		t.Errorf("got %d calls, want %d", calls, want)
 	}
