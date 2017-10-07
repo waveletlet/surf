@@ -250,6 +250,23 @@ type Browser struct {
 	timeout time.Duration
 }
 
+func (bow *Browser) Initialize() {
+	bow.SetUserAgent(DefaultUserAgent)
+	bow.SetState(&jar.State{})
+	bow.SetCookieJar(jar.NewMemoryCookies())
+	bow.SetBookmarksJar(jar.NewMemoryBookmarks())
+	hist := jar.NewMemoryHistory()
+	hist.SetMax(DefaultMaxHistoryLength)
+	bow.SetHistoryJar(hist)
+	bow.SetHeadersJar(jar.NewMemoryHeaders())
+	bow.NewJavaScriptVM()
+	bow.SetAttributes(browser.AttributeMap{
+		browser.SendReferer:         DefaultSendReferer,
+		browser.MetaRefreshHandling: DefaultMetaRefreshHandling,
+		browser.FollowRedirects:     DefaultFollowRedirects,
+	})
+}
+
 // buildClient instanciates the *http.Client used by the browser
 func (bow *Browser) buildClient() *http.Client {
 	return &http.Client{

@@ -28,19 +28,6 @@ var (
 func NewBrowser() *browser.Browser {
 	bow := &browser.Browser{}
 	//# TODO: All this initializing feels like it should be inside Browser init() function
-	bow.SetUserAgent(DefaultUserAgent)
-	bow.SetState(&jar.State{})
-	bow.SetCookieJar(jar.NewMemoryCookies())
-	bow.SetBookmarksJar(jar.NewMemoryBookmarks())
-	hist := jar.NewMemoryHistory()
-	hist.SetMax(DefaultMaxHistoryLength)
-	bow.SetHistoryJar(hist)
-	bow.SetHeadersJar(jar.NewMemoryHeaders())
-	bow.NewJavaScriptVM()
-	bow.SetAttributes(browser.AttributeMap{
-		browser.SendReferer:         DefaultSendReferer,
-		browser.MetaRefreshHandling: DefaultMetaRefreshHandling,
-		browser.FollowRedirects:     DefaultFollowRedirects,
-	})
+	bow.Initialize()
 	return bow
 }
