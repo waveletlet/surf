@@ -266,9 +266,6 @@ type Browser struct {
 
 	// body of the current page.
 	body []byte
-
-	// timeout of the request
-	timeout time.Duration
 }
 
 func (bow *Browser) Initialize() {
@@ -612,7 +609,10 @@ func (bow *Browser) SetHeadersJar(h http.Header) {
 // SetTransport sets the http library transport mechanism for each request.
 // SetTimeout sets the timeout for requests.
 func (bow *Browser) SetTimeout(t time.Duration) {
-	bow.timeout = t
+	if bow.client == nil {
+		bow.client = bow.buildClient()
+	}
+	bow.client.Timeout = t
 }
 
 // Timeout gets the timeout value for requests.
