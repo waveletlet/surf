@@ -2,6 +2,8 @@ package browser
 
 import (
 	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -213,9 +215,6 @@ type Browser struct {
 
 	// body of the current page.
 	body []byte
-
-	// timeout of the request
-	timeout time.Duration
 }
 
 // buildClient instanciates the *http.Client used by the browser
@@ -535,7 +534,10 @@ func (bow *Browser) SetHeadersJar(h http.Header) {
 
 // SetTimeout sets the timeout for requests.
 func (bow *Browser) SetTimeout(t time.Duration) {
-	bow.timeout = t
+	if bow.client == nil {
+		bow.client = bow.buildClient()
+	}
+	bow.client.Timeout = t
 }
 
 // SetTransport sets the http library transport mechanism for each request.
@@ -711,7 +713,21 @@ func (bow *Browser) httpRequest(req *http.Request) error {
 	}
 	defer resp.Body.Close()
 
-	bow.body, err = ioutil.ReadAll(resp.Body)
+	var reader io.Reader
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, err = gzip.NewReader(resp.Body)
+		if err != nil {
+			return err
+		}
+	case "deflate":
+		reader = flate.NewReader(resp.Body)
+
+	default:
+		reader = resp.Body
+	}
+
+	bow.body, err = ioutil.ReadAll(reader)
 	if err != nil {
 		return err
 	}
