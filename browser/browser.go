@@ -2,9 +2,9 @@ package browser
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
-	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
@@ -13,11 +13,30 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/net/proxy"
-	"github.com/robertkrimen/otto"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/lostinblue/surf/agent"
 	"github.com/lostinblue/surf/errors"
 	"github.com/lostinblue/surf/jar"
+	"github.com/robertkrimen/otto"
+	"golang.org/x/net/proxy"
+)
+
+// TODO All these default vars would probably be better in a config file
+var (
+	// DefaultUserAgent is the global user agent value.
+	DefaultUserAgent = agent.Create()
+
+	// DefaultSendReferer is the global value for the AttributeSendReferer attribute.
+	DefaultSendReferer = true
+
+	// DefaultMetaRefreshHandling is the global value for the AttributeHandleRefresh attribute.
+	DefaultMetaRefreshHandling = true
+
+	// DefaultFollowRedirects is the global value for the AttributeFollowRedirects attribute.
+	DefaultFollowRedirects = true
+
+	// DefaultMaxHistoryLength is the global value for max history length.
+	DefaultMaxHistoryLength = 0
 )
 
 // Attribute represents a Browser capability.
@@ -260,10 +279,10 @@ func (bow *Browser) Initialize() {
 	bow.SetHistoryJar(hist)
 	bow.SetHeadersJar(jar.NewMemoryHeaders())
 	bow.NewJavaScriptVM()
-	bow.SetAttributes(browser.AttributeMap{
-		browser.SendReferer:         DefaultSendReferer,
-		browser.MetaRefreshHandling: DefaultMetaRefreshHandling,
-		browser.FollowRedirects:     DefaultFollowRedirects,
+	bow.SetAttributes(AttributeMap{
+		SendReferer:         DefaultSendReferer,
+		MetaRefreshHandling: DefaultMetaRefreshHandling,
+		FollowRedirects:     DefaultFollowRedirects,
 	})
 }
 
@@ -322,7 +341,7 @@ func (bow *Browser) POST(u string, contentType string, body io.Reader) error {
 
 // POSTForm requests the given URL using the POST method with the given data.
 func (bow *Browser) POSTForm(u string, data url.Values) error {
-	return bow.Post(u, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
+	return bow.POST(u, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
 }
 
 // POSTMultipart requests the given URL using the POST method with the given data using multipart/form-data format.
@@ -352,7 +371,7 @@ func (bow *Browser) POSTMultipart(u string, fields url.Values, files FileSet) er
 		return err
 
 	}
-	return bow.Post(u, writer.FormDataContentType(), body)
+	return bow.POST(u, writer.FormDataContentType(), body)
 }
 
 // Back loads the previously requested page.
@@ -495,10 +514,10 @@ func (bow *Browser) Scripts() []*Script {
 		src, err := bow.attrToResolvedURL("src", s)
 		if err == nil {
 			scripts = append(scripts, NewScriptAsset(
-						src,
-						bow.attrOrDefault("id", "", s),
-						bow.attrOrDefault("type", "text/javascript", s),
-						))
+				src,
+				bow.attrOrDefault("id", "", s),
+				bow.attrOrDefault("type", "text/javascript", s),
+			))
 		}
 	})
 
@@ -647,7 +666,7 @@ func (bow *Browser) ResolveStringURL(u string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resolvedURL = bow.URL().ResolveReference(parsedURL)
+	resolvedURL := bow.URL().ResolveReference(parsedURL)
 	return resolvedURL.String(), nil
 }
 

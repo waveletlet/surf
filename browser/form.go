@@ -118,7 +118,7 @@ func (f *Form) Method() string {
 }
 
 func (f *Form) SetMethod(methodType string) {
-	f.method =  methodType
+	f.method = methodType
 }
 
 // Action returns the form action URL.
@@ -130,7 +130,6 @@ func (f *Form) Action() string {
 func (f *Form) SetAction(actionURL string) {
 	f.action = actionURL
 }
-
 
 // Input sets the value of a form field.
 // it returns an ElementNotFound error if the field does not exist
@@ -333,157 +332,157 @@ func (f *Form) Click(button string) error {
 	if _, ok := f.buttons[button]; !ok {
 		return errors.NewInvalidFormValue(
 			"Form does not contain a button with the name '%s'.", button)
+	}
+	return f.send(button, f.buttons[button][0])
+}
+
+// Click submits the form by clicking the button with the given name and value.
+func (f *Form) ClickByValue(name, value string) error {
+	if _, ok := f.buttons[name]; !ok {
+		return errors.NewInvalidFormValue(
+			"Form does not contain a button with the name '%s'.", name)
+	}
+	valueNotFound := true
+	for _, val := range f.buttons[name] {
+		if val == value {
+			valueNotFound = false
+			break
 		}
-		return f.send(button, f.buttons[button][0])
+	}
+	if valueNotFound {
+		return errors.NewInvalidFormValue(
+			"Form does not contain a button with the name '%s' and value '%s'.", name, value)
+	}
+	return f.send(name, value)
+}
+
+// Dom returns the inner *goquery.Selection.
+func (f *Form) Dom() *goquery.Selection {
+	return f.selection
+}
+
+// send submits the form.
+func (f *Form) send(buttonName, buttonValue string) error {
+	method, ok := f.selection.Attr("method")
+	if !ok {
+		method = "GET"
+	}
+	action, ok := f.selection.Attr("action")
+	if !ok {
+		action = f.bow.URL().String()
+	}
+	aurl, err := url.Parse(action)
+	if err != nil {
+		return err
+	}
+	aurl = f.bow.ResolveURL(aurl)
+
+	values := make(url.Values, len(f.fields)+1)
+	for name, vals := range f.fields {
+		values[name] = vals
+	}
+	if buttonName != "" {
+		values.Set(buttonName, buttonValue)
 	}
 
-	// Click submits the form by clicking the button with the given name and value.
-	func (f *Form) ClickByValue(name, value string) error {
-		if _, ok := f.buttons[name]; !ok {
-			return errors.NewInvalidFormValue(
-				"Form does not contain a button with the name '%s'.", name)
+	if strings.ToUpper(method) == "GET" {
+		return f.bow.GETForm(aurl.String(), values)
+	}
+	enctype, _ := f.selection.Attr("enctype")
+	if enctype == "multipart/form-data" {
+		return f.bow.POSTMultipart(aurl.String(), values, f.files)
+	}
+	return f.bow.POSTForm(aurl.String(), values)
+}
+
+// serializeForm converts the form fields into a url.Values type.
+// Returns two url.Value types. The first is the form field values, and the
+// second is the form button values.
+func serializeForm(sel *goquery.Selection) (url.Values, url.Values, url.Values, selects, FileSet) {
+	fields := make(url.Values)
+	buttons := make(url.Values)
+	checkboxs := make(url.Values)
+	selects := make(selects)
+	files := make(FileSet)
+	sel.Find("input,button,textarea").Each(func(_ int, s *goquery.Selection) {
+		if v, ok := s.Attr("disabled"); ok && strings.ToLower(v) == "disabled" {
+			return
+		}
+		if name, ok := s.Attr("name"); ok {
+			val, _ := s.Attr("value")
+			t, _ := s.Attr("type")
+			t = strings.ToLower(t)
+			if t == "submit" {
+				buttons.Add(name, val)
+			} else if t == "checkbox" || t == "radio" {
+				if c, found := s.Attr("checked"); found && strings.ToLower(c) == "checked" {
+					fields.Add(name, val)
+				}
+				if t == "checkbox" {
+					checkboxs.Add(name, val)
+				}
+			} else if t == "file" {
+				files[name] = &File{}
+			} else {
+				fields.Add(name, val)
 			}
-			valueNotFound := true
-			for _, val := range f.buttons[name] {
-				if val == value {
-					valueNotFound = false
-					break
-				}
+		}
+	})
+
+	sel.Find("select").Each(func(_ int, s *goquery.Selection) {
+		if v, ok := s.Attr("disabled"); ok && strings.ToLower(v) == "disabled" {
+			return
+		}
+		if name, ok := s.Attr("name"); ok {
+			_, multiple := s.Attr("multiple")
+			selects[name] = selectOptions{
+				multiple: multiple,
+				values:   make(url.Values),
+				labels:   make(url.Values),
 			}
-			if valueNotFound {
-				return errors.NewInvalidFormValue(
-					"Form does not contain a button with the name '%s' and value '%s'.", name, value)
+			var foundSelected bool
+			s.Find(`option`).Each(func(_ int, ss *goquery.Selection) {
+				val, _ := ss.Attr("value")
+				l, _ := ss.Html()
+				selects[name].values.Add(val, strings.TrimSpace(html.UnescapeString(l)))
+				selects[name].labels.Add(strings.TrimSpace(html.UnescapeString(l)), val)
+				if sel, _ := ss.Attr("selected"); strings.ToLower(sel) != "selected" || foundSelected {
+					return
 				}
-				return f.send(name, value)
-			}
-
-			// Dom returns the inner *goquery.Selection.
-			func (f *Form) Dom() *goquery.Selection {
-				return f.selection
-			}
-
-			// send submits the form.
-			func (f *Form) send(buttonName, buttonValue string) error {
-				method, ok := f.selection.Attr("method")
-				if !ok {
-					method = "GET"
+				fields.Add(name, val)
+				if multiple {
+					return
 				}
-				action, ok := f.selection.Attr("action")
-				if !ok {
-					action = f.bow.URL().String()
-				}
-				aurl, err := url.Parse(action)
-				if err != nil {
-					return err
-				}
-				aurl = f.bow.ResolveURL(aurl)
+				foundSelected = true
+			})
+		}
+	})
 
-				values := make(url.Values, len(f.fields)+1)
-				for name, vals := range f.fields {
-					values[name] = vals
-				}
-				if buttonName != "" {
-					values.Set(buttonName, buttonValue)
-				}
+	return fields, buttons, checkboxs, selects, files
+}
 
-				if strings.ToUpper(method) == "GET" {
-					return f.bow.OpenForm(aurl.String(), values)
-				}
-				enctype, _ := f.selection.Attr("enctype")
-				if enctype == "multipart/form-data" {
-					return f.bow.PostMultipart(aurl.String(), values, f.files)
-				}
-				return f.bow.PostForm(aurl.String(), values)
-			}
+type selects map[string]selectOptions
 
-			// serializeForm converts the form fields into a url.Values type.
-			// Returns two url.Value types. The first is the form field values, and the
-			// second is the form button values.
-			func serializeForm(sel *goquery.Selection) (url.Values, url.Values, url.Values, selects, FileSet) {
-				fields := make(url.Values)
-				buttons := make(url.Values)
-				checkboxs := make(url.Values)
-				selects := make(selects)
-				files := make(FileSet)
-				sel.Find("input,button,textarea").Each(func(_ int, s *goquery.Selection) {
-					if v, ok := s.Attr("disabled"); ok && strings.ToLower(v) == "disabled" {
-						return
-					}
-					if name, ok := s.Attr("name"); ok {
-						val, _ := s.Attr("value")
-						t, _ := s.Attr("type")
-						t = strings.ToLower(t)
-						if t == "submit" {
-							buttons.Add(name, val)
-						} else if t == "checkbox" || t == "radio" {
-							if c, found := s.Attr("checked"); found && strings.ToLower(c) == "checked" {
-								fields.Add(name, val)
-							}
-							if t == "checkbox" {
-								checkboxs.Add(name, val)
-							}
-						} else if t == "file" {
-							files[name] = &File{}
-						} else {
-							fields.Add(name, val)
-						}
-					}
-				})
+type selectOptions struct {
+	multiple bool
+	values   url.Values
+	labels   url.Values
+}
 
-				sel.Find("select").Each(func(_ int, s *goquery.Selection) {
-					if v, ok := s.Attr("disabled"); ok && strings.ToLower(v) == "disabled" {
-						return
-					}
-					if name, ok := s.Attr("name"); ok {
-						_, multiple := s.Attr("multiple")
-						selects[name] = selectOptions{
-							multiple: multiple,
-							values:   make(url.Values),
-							labels:   make(url.Values),
-						}
-						var foundSelected bool
-						s.Find(`option`).Each(func(_ int, ss *goquery.Selection) {
-							val, _ := ss.Attr("value")
-							l, _ := ss.Html()
-							selects[name].values.Add(val, strings.TrimSpace(html.UnescapeString(l)))
-							selects[name].labels.Add(strings.TrimSpace(html.UnescapeString(l)), val)
-							if sel, _ := ss.Attr("selected"); strings.ToLower(sel) != "selected" || foundSelected {
-								return
-							}
-							fields.Add(name, val)
-							if multiple {
-								return
-							}
-							foundSelected = true
-						})
-					}
-				})
+func formAttributes(bow Browsable, s *goquery.Selection) (string, string) {
+	method, ok := s.Attr("method")
+	if !ok {
+		method = "GET"
+	}
+	action, ok := s.Attr("action")
+	if !ok {
+		action = bow.URL().String()
+	}
+	aurl, err := url.Parse(action)
+	if err != nil {
+		return "", ""
+	}
+	aurl = bow.ResolveURL(aurl)
 
-				return fields, buttons, checkboxs, selects, files
-			}
-
-			type selects map[string]selectOptions
-
-			type selectOptions struct {
-				multiple bool
-				values   url.Values
-				labels   url.Values
-			}
-
-			func formAttributes(bow Browsable, s *goquery.Selection) (string, string) {
-				method, ok := s.Attr("method")
-				if !ok {
-					method = "GET"
-				}
-				action, ok := s.Attr("action")
-				if !ok {
-					action = bow.URL().String()
-				}
-				aurl, err := url.Parse(action)
-				if err != nil {
-					return "", ""
-				}
-				aurl = bow.ResolveURL(aurl)
-
-				return strings.ToUpper(method), aurl.String()
-			}
+	return strings.ToUpper(method), aurl.String()
+}

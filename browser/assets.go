@@ -44,11 +44,11 @@ type AsyncDownloadChannel chan *AsyncDownloadResult
 
 // Assetable represents a page asset, such as an image or stylesheet.
 type Assetable interface {
-	// URL returns the asset URL.
-	URL() *url.URL
-
-	// ID returns the asset ID or an empty string when not available.
-	ID() string
+	//	// URL returns the asset URL.
+	//	URL() *url.URL
+	//
+	//	// ID returns the asset ID or an empty string when not available.
+	//	ID() string
 
 	// Type describes the type of asset.
 	AssetType() AssetType
@@ -64,21 +64,6 @@ type Asset struct {
 
 	// Type describes the type of asset.
 	Type AssetType
-}
-
-// URL returns the asset URL.
-func (at *Asset) URL() *url.URL {
-	return at.URL
-}
-
-// ID returns the asset ID or an empty string when not available.
-func (at *Asset) ID() string {
-	return at.ID
-}
-
-// Type returns the asset type.
-func (at *Asset) AssetType() AssetType {
-	return at.Type
 }
 
 // Downloadable represents an asset that may be downloaded.
@@ -103,13 +88,17 @@ type DownloadableAsset struct {
 }
 
 // Download writes the asset to the given io.Writer type.
-func (at *DownloadableAsset) Download(out io.Writer) (int64, error) {
+func (at DownloadableAsset) Download(out io.Writer) (int64, error) {
 	return DownloadAsset(at, out)
 }
 
 // DownloadAsync downloads the asset asynchronously.
-func (at *DownloadableAsset) DownloadAsync(out io.Writer, ch AsyncDownloadChannel) {
+func (at DownloadableAsset) DownloadAsync(out io.Writer, ch AsyncDownloadChannel) {
 	DownloadAssetAsync(at, out, ch)
+}
+
+func (self DownloadableAsset) AssetType() AssetType {
+	return self.Type
 }
 
 // Link stores the properties of a page link.
@@ -208,9 +197,9 @@ func NewScriptAsset(url *url.URL, id, typ string) *Script {
 
 // DownloadAsset copies a remote file to the given writer.
 //# TODO: Should int64 be returned?
-func DownloadAsset(asset Downloadable, out io.Writer) (int64, error) {
+func DownloadAsset(asset DownloadableAsset, out io.Writer) (int64, error) {
 	//# TODO: out may be nil, this needs a check
-	resp, err := http.Get(asset.URL().String())
+	resp, err := http.Get(asset.URL.String())
 	if err != nil {
 		return 0, err
 	}
@@ -227,7 +216,7 @@ func DownloadAsset(asset Downloadable, out io.Writer) (int64, error) {
 
 // DownloadAssetAsync downloads an asset asynchronously and notifies the given channel
 // when the download is complete.
-func DownloadAssetAsync(asset Downloadable, out io.Writer, c AsyncDownloadChannel) {
+func DownloadAssetAsync(asset DownloadableAsset, out io.Writer, c AsyncDownloadChannel) {
 	go func() {
 		results := &AsyncDownloadResult{Asset: asset, Writer: out}
 		size, err := DownloadAsset(asset, out)
