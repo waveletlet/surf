@@ -617,7 +617,7 @@ func (bow *Browser) SetTimeout(t time.Duration) {
 
 // Timeout gets the timeout value for requests.
 func (bow *Browser) Timeout() time.Duration {
-	return bow.timeout
+	return bow.client.Timeout
 }
 
 // SetTransport sets the http library transport mechanism for each request.
