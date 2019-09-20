@@ -140,8 +140,19 @@ func TestCookieHeader(t *testing.T) {
 	}
 }
 
+// Test proxy with Tor
+// Requires Tor installed and listening on default port
+// https://github.com/headzoo/surf/pull/56
+func TestSetProxyWillSetTransport(t *testing.T) {
+	b := newDefaultTestBrowser()
+	b.SetProxy("socks5://127.0.0.1:9050")
+	if b.client.Transport == nil {
+		t.Errorf("no transport method")
+	}
+}
+
 // Should inherit the configuration into a new instance
-func TestTabInheritance(t *testing.T){
+func TestTabInheritance(t *testing.T) {
 	bow1 := newDefaultTestBrowser()
 	bow2 := newDefaultTestBrowser()
 
@@ -163,7 +174,7 @@ func TestTabInheritance(t *testing.T){
 
 	// Create a new browser
 	bow3 := bow1.NewTab()
-	if bow1 == bow3{
+	if bow1 == bow3 {
 		t.Fatal("Tab did not create a new browser")
 	}
 
@@ -177,29 +188,29 @@ func TestTabInheritance(t *testing.T){
 		t.Fatal("Tab did not copy the userAgent")
 	}
 
-	for k,v := range bow1.attributes {
-		if bow1.attributes[k] != bow2.attributes[k]{
+	for k, v := range bow1.attributes {
+		if bow1.attributes[k] != bow2.attributes[k] {
 			t.Errorf("Tab did not copy the %v attribute", v)
 		}
 	}
 
-	if bow1.State() != bow2.State(){
+	if bow1.State() != bow2.State() {
 		t.Fatal("Tab did not copy the state")
 	}
 
-	if bow1.BookmarksJar() != bow2.BookmarksJar(){
+	if bow1.BookmarksJar() != bow2.BookmarksJar() {
 		t.Fatal("Tab did not copy the BookmarksJar")
 	}
 
-	if bow1.CookieJar() != bow2.CookieJar(){
+	if bow1.CookieJar() != bow2.CookieJar() {
 		t.Fatal("Tab did not copy the CookieJar")
 	}
 
-	if bow1.HistoryJar() != bow2.HistoryJar(){
+	if bow1.HistoryJar() != bow2.HistoryJar() {
 		t.Fatal("Tab did not copy the HistoryJar")
 	}
 
-	if len(bow1.headers) != len(bow2.headers){
+	if len(bow1.headers) != len(bow2.headers) {
 		t.Fatal("Tab did not copy the HeadersJar")
 	}
 
