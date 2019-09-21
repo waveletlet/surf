@@ -1,9 +1,12 @@
-Surf
+Surf-Stateless
 ====
 
-[![Build Status](https://img.shields.io/travis/headzoo/surf/master.svg?style=flat-square)](https://travis-ci.org/headzoo/surf)
-[![GoDoc](https://godoc.org/github.com/headzoo/surf?status.svg)](http://godoc.org/github.com/headzoo/surf)
-[![Documentation](https://img.shields.io/badge/documentation-readthedocs-blue.svg?style=flat-square)](http://surf.readthedocs.io/)
+Hacking up [](https://github.com/headzoo/surf) to make it stateless.
+
+The following is the original readme from upstream and hasn't been edited to
+reflect the changes. 
+
+
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://raw.githubusercontent.com/headzoo/surf/master/LICENSE.md)
 
 Surf is a Go (golang) library that implements a virtual web browser that you control programmatically.
