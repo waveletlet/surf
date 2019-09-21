@@ -20,8 +20,8 @@ import (
 	"github.com/headzoo/ut"
 )
 
-func newBrowser() *Browser {
-	return &Browser{
+func newBrowser() Browser {
+	return Browser{
 		headers: make(http.Header, 10),
 		history: jar.NewMemoryHistory(),
 	}
@@ -60,7 +60,7 @@ func TestBrowserFormDefaultNotSelected(t *testing.T) {
 	defer ts.Close()
 
 	bow := newBrowser()
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	f, err := bow.Form("[name='default']")
@@ -70,58 +70,58 @@ func TestBrowserFormDefaultNotSelected(t *testing.T) {
 
 	// Initial state should not have any radio or checkbox inputs selected
 	// submit with second button
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertEquals("age=&submit2=submitted2", string(bow.body))
 
 	// Change text intput for age
 	// submit with first button
 	err = f.Input("age", "55")
 	ut.AssertNil(err)
-	err = f.Click("submit1")
+	bow, err = f.Click("submit1")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&submit1=submitted1`, string(bow.body))
 
 	// gender does not exist in the form, so Set() is required to add it to the form
 	err = f.Set("gender", "male")
 	ut.AssertNil(err)
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=male&submit2=submitted2`, string(bow.body))
 
 	// Change gender
 	err = f.Input("gender", "female")
 	ut.AssertNil(err)
-	err = f.Click("submit1")
+	bow, err = f.Click("submit1")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=female&submit1=submitted1`, string(bow.body))
 
 	err = f.Set("option1", "on")
 	ut.AssertNil(err)
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=female&option1=on&submit2=submitted2`, string(bow.body))
 
 	err = f.Set("option2", "on")
 	ut.AssertNil(err)
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=female&option1=on&option2=on&submit2=submitted2`, string(bow.body))
 
 	// uncheck option1
 	f.Remove("option1")
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=female&option2=on&submit2=submitted2`, string(bow.body))
 
 	// uncheck option2
 	f.Remove("option2")
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=female&submit2=submitted2`, string(bow.body))
 
 	err = f.Check("option1")
 	ut.AssertNil(err)
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=female&option1=on&submit2=submitted2`, string(bow.body))
 	b, err := f.IsChecked("option1")
@@ -131,14 +131,14 @@ func TestBrowserFormDefaultNotSelected(t *testing.T) {
 	// option2 does not exist in the form, so Set() is required to add it to the form
 	err = f.Check("option2")
 	ut.AssertNil(err)
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=female&option1=on&option2=on&submit2=submitted2`, string(bow.body))
 
 	// uncheck option1
 	err = f.UnCheck("option1")
 	ut.AssertNil(err)
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=female&option2=on&submit2=submitted2`, string(bow.body))
 	b, err = f.IsChecked("option1")
@@ -148,7 +148,7 @@ func TestBrowserFormDefaultNotSelected(t *testing.T) {
 	// uncheck option2
 	err = f.UnCheck("option2")
 	ut.AssertNil(err)
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&gender=female&submit2=submitted2`, string(bow.body))
 	_, err = f.IsChecked("option3")
@@ -157,7 +157,7 @@ func TestBrowserFormDefaultNotSelected(t *testing.T) {
 	// select count by label
 	err = f.SelectByOptionLabel("count", "Two")
 	ut.AssertNil(err)
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&count=2&gender=female&submit2=submitted2`, string(bow.body))
 
@@ -168,7 +168,7 @@ func TestBrowserFormDefaultNotSelected(t *testing.T) {
 	// select count by value
 	err = f.SelectByOptionValue("count", "5")
 	ut.AssertNil(err)
-	err = f.Click("submit2")
+	bow, err = f.Click("submit2")
 	ut.AssertNil(err)
 	ut.AssertEquals(`age=55&count=5&gender=female&submit2=submitted2`, string(bow.body))
 
@@ -200,7 +200,7 @@ func TestBrowserFormSelected(t *testing.T) {
 	defer ts.Close()
 
 	bow := newBrowser()
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	f, err := bow.Form("[name='default']")
@@ -209,7 +209,7 @@ func TestBrowserFormSelected(t *testing.T) {
 	ut.AssertEquals(false, f.(*Form).selects["count"].multiple)
 
 	// Initial state should have defaults selected
-	err = f.Submit()
+	bow, err = f.Submit()
 	ut.AssertNil(err)
 	ut.AssertEquals("count=2&submit=submitted", string(bow.body))
 }
@@ -246,7 +246,7 @@ func TestBrowserFormDefaultsSelected(t *testing.T) {
 	defer ts.Close()
 
 	bow := newBrowser()
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	f, err := bow.Form("[name='default']")
@@ -255,7 +255,7 @@ func TestBrowserFormDefaultsSelected(t *testing.T) {
 	ut.AssertEquals(false, f.(*Form).selects["count"].multiple)
 
 	// Initial state should have defaults selected
-	err = f.Submit()
+	bow, err = f.Submit()
 	ut.AssertNil(err)
 	ut.AssertEquals("count=3&gender=female&option2=on&submit=submitted", string(bow.body))
 
@@ -291,7 +291,7 @@ func TestBrowserFormSelectMultiple(t *testing.T) {
 	defer ts.Close()
 
 	bow := newBrowser()
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	f, err := bow.Form("[name='default']")
@@ -314,28 +314,28 @@ func TestBrowserFormSelectMultiple(t *testing.T) {
 	ut.AssertEquals("Three", vals[1])
 
 	// Initial state should have defaults selected
-	err = f.Submit()
+	bow, err = f.Submit()
 	ut.AssertNil(err)
 	ut.AssertEquals("count=1&count=3&submit=submitted", string(bow.body))
 
 	// select multi count by value
 	err = f.SelectByOptionValue("count", "5", "1")
 	ut.AssertNil(err)
-	err = f.Submit()
+	bow, err = f.Submit()
 	ut.AssertNil(err)
 	ut.AssertEquals(`count=5&count=1&submit=submitted`, string(bow.body))
 
 	// select multi count by label
 	err = f.SelectByOptionLabel("count", "Two", "Three")
 	ut.AssertNil(err)
-	err = f.Submit()
+	bow, err = f.Submit()
 	ut.AssertNil(err)
 	ut.AssertEquals(`count=2&count=3&submit=submitted`, string(bow.body))
 
 	// select multi count by label
 	err = f.RemoveValue("count", "2")
 	ut.AssertNil(err)
-	err = f.Submit()
+	bow, err = f.Submit()
 	ut.AssertNil(err)
 	ut.AssertEquals(`count=3&submit=submitted`, string(bow.body))
 }
@@ -359,7 +359,7 @@ func TestBrowserFormClickByValue(t *testing.T) {
 
 	bow := newBrowser()
 
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	f, err := bow.Form("[name='default']")
@@ -367,7 +367,7 @@ func TestBrowserFormClickByValue(t *testing.T) {
 
 	err = f.Input("age", "55")
 	ut.AssertNil(err)
-	err = f.ClickByValue("submit", "submitted2")
+	bow, err = f.ClickByValue("submit", "submitted2")
 	ut.AssertNil(err)
 	ut.AssertContains("age=55", bow.Body())
 	ut.AssertContains("submit=submitted2", bow.Body())
@@ -392,7 +392,7 @@ func TestSubmitMultipart(t *testing.T) {
 
 	bow := newBrowser()
 
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	f, err := bow.Form("[name='default']")
@@ -402,7 +402,7 @@ func TestSubmitMultipart(t *testing.T) {
 	imgData, err := base64.StdEncoding.DecodeString(image)
 	err = f.File("image", "profile.png", bytes.NewBuffer(imgData))
 	ut.AssertNil(err)
-	err = f.Submit()
+	bow, err = f.Submit()
 	ut.AssertNil(err)
 	ut.AssertContains("comment=my+profile+picture", bow.Body())
 	ut.AssertContains("image=profile.png", bow.Body())

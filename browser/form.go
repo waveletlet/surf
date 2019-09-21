@@ -72,15 +72,15 @@ type Submittable interface {
 	// AddButton adds a new button to the collection of buttons in the form, with the given name and value.
 	AddButton(name, value string)
 
-	Click(button string) error
-	ClickByValue(name, value string) error
-	Submit() error
+	Click(button string) (Browser, error)
+	ClickByValue(name, value string) (Browser, error)
+	Submit() (Browser, error)
 	Dom() *goquery.Selection
 }
 
 // Form is the default form element.
 type Form struct {
-	bow       Browsable
+	bow       Browser
 	selection *goquery.Selection
 	method    string
 	action    string
@@ -92,7 +92,7 @@ type Form struct {
 }
 
 // NewForm creates and returns a *Form type.
-func NewForm(bow Browsable, s *goquery.Selection) *Form {
+func NewForm(bow Browser, s *goquery.Selection) *Form {
 	fields, buttons, checkboxs, selects, files := serializeForm(s)
 	method, action := formAttributes(bow, s)
 
@@ -297,7 +297,7 @@ func (f *Form) SelectLabels(name string) ([]string, error) {
 // Submit submits the form.
 // Clicks the first button in the form, or submits the form without using
 // any button when the form does not contain any buttons.
-func (f *Form) Submit() error {
+func (f *Form) Submit() (Browser, error) {
 	if len(f.buttons) > 0 {
 		for name := range f.buttons {
 			return f.Click(name)
@@ -312,18 +312,18 @@ func (f *Form) AddButton(button, value string) {
 }
 
 // Click submits the form by clicking the button with the given name.
-func (f *Form) Click(button string) error {
+func (f *Form) Click(button string) (Browser, error) {
 	if _, ok := f.buttons[button]; !ok {
-		return errors.NewInvalidFormValue(
+		return f.bow, errors.NewInvalidFormValue(
 			"Form does not contain a button with the name '%s'.", button)
 	}
 	return f.send(button, f.buttons[button][0])
 }
 
 // Click submits the form by clicking the button with the given name and value.
-func (f *Form) ClickByValue(name, value string) error {
+func (f *Form) ClickByValue(name, value string) (Browser, error) {
 	if _, ok := f.buttons[name]; !ok {
-		return errors.NewInvalidFormValue(
+		return f.bow, errors.NewInvalidFormValue(
 			"Form does not contain a button with the name '%s'.", name)
 	}
 	valueNotFound := true
@@ -334,7 +334,7 @@ func (f *Form) ClickByValue(name, value string) error {
 		}
 	}
 	if valueNotFound {
-		return errors.NewInvalidFormValue(
+		return f.bow, errors.NewInvalidFormValue(
 			"Form does not contain a button with the name '%s' and value '%s'.", name, value)
 	}
 	return f.send(name, value)
@@ -346,7 +346,7 @@ func (f *Form) Dom() *goquery.Selection {
 }
 
 // send submits the form.
-func (f *Form) send(buttonName, buttonValue string) error {
+func (f *Form) send(buttonName, buttonValue string) (Browser, error) {
 	method, ok := f.selection.Attr("method")
 	if !ok {
 		method = "GET"
@@ -357,7 +357,7 @@ func (f *Form) send(buttonName, buttonValue string) error {
 	}
 	aurl, err := url.Parse(action)
 	if err != nil {
-		return err
+		return f.bow, err
 	}
 	aurl = f.bow.ResolveUrl(aurl)
 
@@ -467,7 +467,7 @@ type selectOptions struct {
 	labels   url.Values
 }
 
-func formAttributes(bow Browsable, s *goquery.Selection) (string, string) {
+func formAttributes(bow Browser, s *goquery.Selection) (string, string) {
 	method, ok := s.Attr("method")
 	if !ok {
 		method = "GET"

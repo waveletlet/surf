@@ -3,8 +3,19 @@ Surf-Stateless
 
 Hacking up [](https://github.com/headzoo/surf) to make it stateless.
 
+
+#### Misc notes/TODOs
+* "History" is badly named, it's more like "bfcache"
+* How are refer/redirects handled?
+
+#### Done
+* First pass de-stating browser.Browser, still need to rewrite tests
+
+
+----
 The following is the original readme from upstream and hasn't been edited to
 reflect the changes. 
+====
 
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://raw.githubusercontent.com/headzoo/surf/master/LICENSE.md)
