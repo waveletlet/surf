@@ -842,7 +842,6 @@ func (bow Browser) postSend() Browser {
 // shouldRedirect is used as the value to http.Client.CheckRedirect.
 func (bow Browser) shouldRedirect(req *http.Request, _ []*http.Request) error {
 	if bow.attributes[FollowRedirects] {
-		req.Header.Set("User-Agent", bow.userAgent)
 		return nil
 	}
 	return errors.NewLocation(
