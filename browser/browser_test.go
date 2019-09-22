@@ -11,15 +11,15 @@ import (
 	"github.com/headzoo/surf/jar"
 )
 
-func newDefaultTestBrowser() *Browser {
-	bow := &Browser{}
-	bow.SetUserAgent(agent.Create())
-	bow.SetState(&jar.State{})
-	bow.SetCookieJar(jar.NewMemoryCookies())
-	bow.SetBookmarksJar(jar.NewMemoryBookmarks())
-	bow.SetHistoryJar(jar.NewMemoryHistory())
-	bow.SetHeadersJar(jar.NewMemoryHeaders())
-	bow.SetAttributes(AttributeMap{
+func newDefaultTestBrowser() Browser {
+	bow := Browser{}
+	bow = bow.SetUserAgent(agent.Create())
+	bow = bow.SetState(&jar.State{})
+	bow = bow.SetCookieJar(jar.NewMemoryCookies())
+	bow = bow.SetBookmarksJar(jar.NewMemoryBookmarks())
+	bow = bow.SetHistoryJar(jar.NewMemoryHistory())
+	bow = bow.SetHeadersJar(jar.NewMemoryHeaders())
+	bow = bow.SetAttributes(AttributeMap{
 		SendReferer:         true,
 		MetaRefreshHandling: true,
 		FollowRedirects:     true,
@@ -79,7 +79,8 @@ func TestRedirect(t *testing.T) {
 	// Alright, now let's see if the browser does the same thing
 	b := newDefaultTestBrowser()
 
-	if _, err := b.Open(ts1.URL); err != nil {
+	b, err = b.Open(ts1.URL)
+	if err != nil {
 		t.Errorf("Failed to open url: %s", ts1.URL)
 		return
 	}
@@ -145,7 +146,7 @@ func TestCookieHeader(t *testing.T) {
 // https://github.com/headzoo/surf/pull/56
 func TestSetProxyWillSetTransport(t *testing.T) {
 	b := newDefaultTestBrowser()
-	b.SetProxy("socks5://127.0.0.1:9050")
+	b = b.SetProxy("socks5://127.0.0.1:9050")
 	if b.client.Transport == nil {
 		t.Errorf("no transport method")
 	}
