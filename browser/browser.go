@@ -225,6 +225,13 @@ func (bow Browser) buildClient() *http.Client {
 	}
 }
 
+func (bow Browser) rebuildClient() {
+	// call this to make sure browser object is updated before calling client.Do()
+	// are there any other client functions that need an updated browser before
+	// running?
+	bow.client.CheckRedirect = bow.shouldRedirect
+}
+
 // Open requests the given URL using the GET method.
 func (bow Browser) Open(u string) (Browser, error) {
 	ur, err := url.Parse(u)
@@ -571,38 +578,47 @@ func (bow Browser) SetTimeout(t time.Duration) Browser {
 }
 
 // SetTransport sets the http library transport mechanism for each request.
-func (bow Browser) SetTransport(rt http.RoundTripper) Browser {
+func (bow Browser) SetTransport(rt http.RoundTripper) {
 	if bow.client == nil {
 		bow.client = bow.buildClient()
 	}
 	bow.client.Transport = rt
-	return bow
 }
 
 // Set a proxy url
-func (bow Browser) SetProxy(u string) (Browser, error) {
+func (bow Browser) SetProxy(u string) error {
 	_url, err := url.Parse(u)
 	if err != nil {
-		return bow, err
+		return err
 	}
 	dialer, err := proxy.FromURL(_url, proxy.Direct)
 	if err != nil {
-		return bow, err
+		return err
 	}
 	bow.SetTransport(&http.Transport{Dial: dialer.Dial})
 
-	return bow, nil
+	return nil
 }
 
 // AddRequestHeader sets a header the browser sends with each request.
 func (bow Browser) AddRequestHeader(name, value string) Browser {
+	//TODO test working?
+	fmt.Println("bow.headers")
+	fmt.Println(bow.headers)
+	// header.Set and header.Add are NOT the same thing, probably want to add a
+	// separate function for setting vs adding
 	bow.headers.Set(name, value)
+	fmt.Println(bow.headers)
 	return bow
 }
 
 // DelRequestHeader deletes a header so the browser will not send it with future requests.
 func (bow Browser) DelRequestHeader(name string) Browser {
+	fmt.Println("bow.headers")
+	//TODO test working?
+	fmt.Println(bow.headers)
 	bow.headers.Del(name)
+	fmt.Println(bow.headers)
 	return bow
 }
 
@@ -772,7 +788,10 @@ func (bow Browser) httpRequest(req *http.Request) (Browser, error) {
 		bow.client = bow.buildClient()
 	}
 	bow.preSend()
+
+	bow.rebuildClient()
 	resp, err := bow.client.Do(req)
+
 	if err != nil {
 		return bow, err
 	}
@@ -803,6 +822,7 @@ func (bow Browser) httpRequest(req *http.Request) (Browser, error) {
 		return bow, err
 	}
 
+	// TODO check these functions are stateless
 	bow.history.Push(bow.state)
 	bow.state = jar.NewHistoryState(req, resp, dom)
 	bow.postSend()

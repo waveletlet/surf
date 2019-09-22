@@ -81,7 +81,7 @@ func TestRedirect(t *testing.T) {
 
 	b, err = b.Open(ts1.URL)
 	if err != nil {
-		t.Errorf("Failed to open url: %s", ts1.URL)
+		t.Errorf("Failed to open url: %s\n%v", ts1.URL, err)
 		return
 	}
 
@@ -146,7 +146,10 @@ func TestCookieHeader(t *testing.T) {
 // https://github.com/headzoo/surf/pull/56
 func TestSetProxyWillSetTransport(t *testing.T) {
 	b := newDefaultTestBrowser()
-	b = b.SetProxy("socks5://127.0.0.1:9050")
+	err := b.SetProxy("socks5://127.0.0.1:9050")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if b.client.Transport == nil {
 		t.Errorf("no transport method")
 	}
