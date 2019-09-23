@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/headzoo/surf/agent"
-	"github.com/headzoo/surf/jar"
+	"github.com/waveletlet/surf/agent"
+	"github.com/waveletlet/surf/jar"
 )
 
 func newDefaultTestBrowser() Browser {

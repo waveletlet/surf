@@ -18,8 +18,8 @@ import (
 	"golang.org/x/net/proxy"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/headzoo/surf/errors"
-	"github.com/headzoo/surf/jar"
+	"github.com/waveletlet/surf/errors"
+	"github.com/waveletlet/surf/jar"
 )
 
 // Attribute represents a Browser capability.

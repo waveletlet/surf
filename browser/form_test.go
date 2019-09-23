@@ -15,8 +15,8 @@ import (
 
 	"io/ioutil"
 
-	surferrors "github.com/headzoo/surf/errors"
-	"github.com/headzoo/surf/jar"
+	surferrors "github.com/waveletlet/surf/errors"
+	"github.com/waveletlet/surf/jar"
 	"github.com/headzoo/ut"
 )
 

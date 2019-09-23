@@ -3,7 +3,7 @@ package surf
 import (
 	"bytes"
 	"fmt"
-	"github.com/headzoo/surf/jar"
+	"github.com/waveletlet/surf/jar"
 	"github.com/headzoo/ut"
 	"net/http"
 	"net/http/httptest"
