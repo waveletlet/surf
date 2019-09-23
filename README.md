@@ -7,6 +7,8 @@ Hacking up [](https://github.com/headzoo/surf) to make it stateless.
 #### Misc notes/TODOs
 * "History" is badly named, it's more like "bfcache"
 * How are refer/redirects handled?
+* Lots of stuff fails ungracefully if you accidentally call it on a nonexistant
+  browser property
 
 #### Done
 * First pass de-stating browser.Browser, still need to rewrite tests

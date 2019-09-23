@@ -602,23 +602,15 @@ func (bow Browser) SetProxy(u string) error {
 
 // AddRequestHeader sets a header the browser sends with each request.
 func (bow Browser) AddRequestHeader(name, value string) Browser {
-	//TODO test working?
-	fmt.Println("bow.headers")
-	fmt.Println(bow.headers)
 	// header.Set and header.Add are NOT the same thing, probably want to add a
 	// separate function for setting vs adding
 	bow.headers.Set(name, value)
-	fmt.Println(bow.headers)
 	return bow
 }
 
 // DelRequestHeader deletes a header so the browser will not send it with future requests.
 func (bow Browser) DelRequestHeader(name string) Browser {
-	fmt.Println("bow.headers")
-	//TODO test working?
-	fmt.Println(bow.headers)
 	bow.headers.Del(name)
-	fmt.Println(bow.headers)
 	return bow
 }
 

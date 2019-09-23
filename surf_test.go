@@ -3,11 +3,12 @@ package surf
 import (
 	"bytes"
 	"fmt"
-	"github.com/waveletlet/surf/jar"
-	"github.com/headzoo/ut"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/headzoo/ut"
+	"github.com/waveletlet/surf/jar"
 )
 
 func TestGet(t *testing.T) {
@@ -23,20 +24,20 @@ func TestGet(t *testing.T) {
 
 	bow := NewBrowser()
 
-	err := bow.Open(ts.URL + "/page1")
+	bow, err := bow.Open(ts.URL + "/page1")
 	ut.AssertNil(err)
 	ut.AssertEquals("Surf Page 1", bow.Title())
 	ut.AssertContains("<p>Hello, Surf!</p>", bow.Body())
 
-	err = bow.Open(ts.URL + "/page2")
+	bow, err = bow.Open(ts.URL + "/page2")
 	ut.AssertNil(err)
 	ut.AssertEquals("Surf Page 2", bow.Title())
 
-	ok := bow.Back()
+	bow, ok := bow.Back()
 	ut.AssertTrue(ok)
 	ut.AssertEquals("Surf Page 1", bow.Title())
 
-	ok = bow.Back()
+	bow, ok = bow.Back()
 	ut.AssertFalse(ok)
 	ut.AssertEquals("Surf Page 1", bow.Title())
 }
@@ -55,7 +56,7 @@ func TestPost(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	bow.Post(ts.URL, "application/x-www-form-urlencoded", nil)
+	bow, _ = bow.Post(ts.URL, "application/x-www-form-urlencoded", nil)
 	ut.AssertEquals(200, bow.StatusCode())
 }
 
@@ -70,7 +71,7 @@ func TestHead(t *testing.T) {
 
 	bow := NewBrowser()
 
-	err := bow.Head(ts.URL + "/page1")
+	bow, err := bow.Head(ts.URL + "/page1")
 	ut.AssertNil(err)
 	ut.AssertNotNil(r)
 }
@@ -83,7 +84,7 @@ func TestDownload(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	bow.Open(ts.URL)
+	bow, _ = bow.Open(ts.URL)
 
 	buff := &bytes.Buffer{}
 	l, err := bow.Download(buff)
@@ -101,7 +102,7 @@ func TestDownloadContentType(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	bow.Open(ts.URL)
+	bow, _ = bow.Open(ts.URL)
 
 	buff := &bytes.Buffer{}
 	bow.Download(buff)
@@ -116,8 +117,8 @@ func TestUserAgent(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	bow.SetUserAgent("Testing/1.0")
-	err := bow.Open(ts.URL)
+	bow = bow.SetUserAgent("Testing/1.0")
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 	ut.AssertEquals("Testing/1.0", bow.Body())
 }
@@ -131,9 +132,9 @@ func TestHeaders(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	bow.AddRequestHeader("X-Testing-1", "Testing-1")
-	bow.AddRequestHeader("X-Testing-2", "Testing-2")
-	err := bow.Open(ts.URL)
+	bow = bow.AddRequestHeader("X-Testing-1", "Testing-1")
+	bow = bow.AddRequestHeader("X-Testing-2", "Testing-2")
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 	ut.AssertContains("Testing-1", bow.Body())
 	ut.AssertContains("Testing-2", bow.Body())
@@ -149,9 +150,9 @@ func TestHeadersBug19(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	bow.AddRequestHeader("X-Testing", "Testing-1")
-	bow.AddRequestHeader("X-Testing", "Testing-2")
-	err := bow.Open(ts.URL)
+	bow = bow.AddRequestHeader("X-Testing", "Testing-1")
+	bow = bow.AddRequestHeader("X-Testing", "Testing-2")
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 	ut.AssertContains("Testing-2", bow.Body())
 }
@@ -165,16 +166,16 @@ func TestBookmarks(t *testing.T) {
 
 	bookmarks := jar.NewMemoryBookmarks()
 	bow := NewBrowser()
-	bow.SetBookmarksJar(bookmarks)
+	bow = bow.SetBookmarksJar(bookmarks)
 
 	bookmarks.Save("test1", ts.URL)
-	bow.OpenBookmark("test1")
+	bow, _ = bow.OpenBookmark("test1")
 	ut.AssertEquals("Surf Page 1", bow.Title())
 	ut.AssertContains("<p>Hello, Surf!</p>", bow.Body())
 
-	err := bow.Bookmark("test2")
+	bow, err := bow.Bookmark("test2")
 	ut.AssertNil(err)
-	bow.OpenBookmark("test2")
+	bow, _ = bow.OpenBookmark("test2")
 	ut.AssertEquals("Surf Page 1", bow.Title())
 }
 
@@ -190,10 +191,10 @@ func TestClick(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
-	err = bow.Click("a:contains('click')")
+	bow, err = bow.Click("a:contains('click')")
 	ut.AssertNil(err)
 	ut.AssertContains("<p>Hello, Surf!</p>", bow.Body())
 }
@@ -206,7 +207,7 @@ func TestLinks(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	links := bow.Links()
@@ -227,7 +228,7 @@ func TestImages(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	images := bow.Images()
@@ -257,7 +258,7 @@ func TestStylesheets(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	stylesheets := bow.Stylesheets()
@@ -285,7 +286,7 @@ func TestScripts(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	err := bow.Open(ts.URL)
+	bow, err := bow.Open(ts.URL)
 	ut.AssertNil(err)
 
 	scripts := bow.Scripts()
