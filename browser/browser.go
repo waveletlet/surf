@@ -637,6 +637,9 @@ func (bow Browser) ResolveStringUrl(u string) (string, error) {
 	return pu.String(), nil
 }
 
+// TODO bad function name, bow.body is already downloaded. Should be called
+// "Save" or "WriteTo" or something
+//
 // Download writes the contents of the document to the given writer.
 func (bow Browser) Download(o io.Writer) (int64, error) {
 	buff := bytes.NewBuffer(bow.body)
