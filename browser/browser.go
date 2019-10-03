@@ -632,10 +632,19 @@ func (bow Browser) ResolveStringUrl(u string) (string, error) {
 // TODO bad function name, bow.body is already downloaded. Should be called
 // "Save" or "WriteTo" or something
 //
-// Download writes the contents of the document to the given writer.
-func (bow Browser) Download(o io.Writer) (int64, error) {
+// WriteTo writes the contents of the document to the given writer.
+func (bow Browser) WriteTo(o io.Writer) (int64, error) {
 	buff := bytes.NewBuffer(bow.body)
 	return io.Copy(o, buff)
+}
+
+// Download makes a GET request and writes the body of the response to the given writer.
+func (bow Browser) Download(u string, o io.Writer) (int64, error) {
+	bow, err := bow.Open(u)
+	if err != nil {
+		return 0, err
+	}
+	return bow.WriteTo(o)
 }
 
 // Url returns the page URL as a string.

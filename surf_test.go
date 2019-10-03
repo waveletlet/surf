@@ -76,7 +76,7 @@ func TestHead(t *testing.T) {
 	ut.AssertNotNil(r)
 }
 
-func TestDownload(t *testing.T) {
+func TestWriteTo(t *testing.T) {
 	ut.Run(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprint(w, req.UserAgent())
@@ -87,7 +87,40 @@ func TestDownload(t *testing.T) {
 	bow, _ = bow.Open(ts.URL)
 
 	buff := &bytes.Buffer{}
-	l, err := bow.Download(buff)
+	l, err := bow.WriteTo(buff)
+	ut.AssertNil(err)
+	ut.AssertGreaterThan(0, int(l))
+	ut.AssertEquals(int(l), buff.Len())
+}
+
+func TestWriteToContentType(t *testing.T) {
+	ut.Run(t)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		b := bytes.NewBufferString("Hello")
+		fmt.Fprint(w, b)
+	}))
+	defer ts.Close()
+
+	bow := NewBrowser()
+	bow, _ = bow.Open(ts.URL)
+
+	buff := &bytes.Buffer{}
+	bow.WriteTo(buff)
+	ut.AssertEquals("Hello", buff.String())
+}
+
+func TestDownload(t *testing.T) {
+	ut.Run(t)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		fmt.Fprint(w, req.UserAgent())
+	}))
+	defer ts.Close()
+
+	bow := NewBrowser()
+	//bow, _ = bow.Open(ts.URL)
+
+	buff := &bytes.Buffer{}
+	l, err := bow.Download(ts.URL, buff)
 	ut.AssertNil(err)
 	ut.AssertGreaterThan(0, int(l))
 	ut.AssertEquals(int(l), buff.Len())
@@ -102,10 +135,10 @@ func TestDownloadContentType(t *testing.T) {
 	defer ts.Close()
 
 	bow := NewBrowser()
-	bow, _ = bow.Open(ts.URL)
+	//bow, _ = bow.Open(ts.URL)
 
 	buff := &bytes.Buffer{}
-	bow.Download(buff)
+	bow.Download(ts.URL, buff)
 	ut.AssertEquals("Hello", buff.String())
 }
 
