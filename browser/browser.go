@@ -782,7 +782,7 @@ func (bow Browser) httpRequest(req *http.Request) (Browser, error) {
 	if bow.client == nil {
 		bow.client = bow.buildClient()
 	}
-	bow.preSend()
+	bow = bow.preSend()
 
 	bow.rebuildClient()
 	resp, err := bow.client.Do(req)
@@ -820,7 +820,7 @@ func (bow Browser) httpRequest(req *http.Request) (Browser, error) {
 	// TODO check these functions are stateless
 	bow.history.Push(bow.state)
 	bow.state = jar.NewHistoryState(req, resp, dom)
-	bow.postSend()
+	bow = bow.postSend()
 
 	return bow, nil
 }
@@ -845,7 +845,7 @@ func (bow Browser) postSend() Browser {
 					bow.refresh = time.NewTimer(dur)
 					go func() {
 						<-bow.refresh.C
-						bow.Reload()
+						bow, _ = bow.Reload()
 					}()
 				}
 			}
